@@ -30,7 +30,6 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
 /coverage/
 
 # Symbolication related
@@ -48,8 +47,9 @@ app.*.map.json
 .env
 *.env.local
 
-# Build output
-build/
+# Build output (build/web is tracked for Vercel deployment)
+build/*/
+!build/web/
 
 # Dart tool
 .dart_tool/

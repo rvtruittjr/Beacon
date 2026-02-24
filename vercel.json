@@ -1,7 +1,7 @@
 {
-  "buildCommand": "echo \"SUPABASE_URL=$SUPABASE_URL\" > .env && echo \"SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY\" >> .env && echo \"STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY\" >> .env && curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.32.4-stable.tar.xz | tar xJ -C /tmp && /tmp/flutter/bin/flutter build web --no-tree-shake-icons --dart-define-from-file=.env",
+  "buildCommand": "",
   "outputDirectory": "build/web",
-  "installCommand": "echo 'skip'",
+  "installCommand": "",
   "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
