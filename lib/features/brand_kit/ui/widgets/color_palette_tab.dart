@@ -35,20 +35,15 @@ class ColorPaletteTab extends ConsumerWidget {
         }
 
         return Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: ReorderableWrap(
-                colors: colors,
-                onReorder: (oldIndex, newIndex) =>
-                    _handleReorder(ref, colors, oldIndex, newIndex),
-                onAdd: () => _showColorDialog(context, ref),
-                onEdit: (c) => _showColorDialog(context, ref, existing: c),
-                onDelete: (c) => _deleteColor(ref, c),
-                onCopy: (hex) => _copyHex(context, hex),
-              ),
-            ),
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: ReorderableWrap(
+            colors: colors,
+            onReorder: (oldIndex, newIndex) =>
+                _handleReorder(ref, colors, oldIndex, newIndex),
+            onAdd: () => _showColorDialog(context, ref),
+            onEdit: (c) => _showColorDialog(context, ref, existing: c),
+            onDelete: (c) => _deleteColor(ref, c),
+            onCopy: (hex) => _copyHex(context, hex),
           ),
         );
       },
@@ -208,7 +203,7 @@ class _ColorSwatchItemState extends State<_ColorSwatchItem> {
         onLongPress: () => _showContextMenuMobile(context),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
+            horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm,
           ),
           child: SizedBox(
@@ -318,7 +313,7 @@ class _AddSwatchButton extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.lg,
           vertical: AppSpacing.sm,
         ),
         child: SizedBox(
