@@ -35,26 +35,31 @@ class BrandKitScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          TabBar(
-            labelColor: textColor,
-            unselectedLabelColor: mutedColor,
-            indicatorColor: AppColors.blockLime,
-            indicatorWeight: 3,
-            tabAlignment: TabAlignment.start,
-            isScrollable: true,
-            labelStyle: AppFonts.inter(
-              fontSize: 14,
-              color: textColor,
-            ).copyWith(fontWeight: FontWeight.w600),
-            unselectedLabelStyle: AppFonts.inter(
-              fontSize: 14,
-              color: mutedColor,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: TabBar(
+              labelColor: textColor,
+              unselectedLabelColor: mutedColor,
+              indicatorColor: AppColors.blockLime,
+              indicatorWeight: 3,
+              tabAlignment: TabAlignment.start,
+              isScrollable: true,
+              padding: EdgeInsets.zero,
+              labelPadding: const EdgeInsets.only(right: AppSpacing.lg),
+              labelStyle: AppFonts.inter(
+                fontSize: 14,
+                color: textColor,
+              ).copyWith(fontWeight: FontWeight.w600),
+              unselectedLabelStyle: AppFonts.inter(
+                fontSize: 14,
+                color: mutedColor,
+              ),
+              tabs: const [
+                Tab(text: 'Colors'),
+                Tab(text: 'Fonts'),
+                Tab(text: 'Logos'),
+              ],
             ),
-            tabs: const [
-              Tab(text: 'Colors'),
-              Tab(text: 'Fonts'),
-              Tab(text: 'Logos'),
-            ],
           ),
           const Expanded(
             child: TabBarView(
