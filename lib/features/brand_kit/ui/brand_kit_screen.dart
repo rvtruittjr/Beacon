@@ -42,6 +42,7 @@ class BrandKitScreen extends StatelessWidget {
               unselectedLabelColor: mutedColor,
               indicatorColor: AppColors.blockLime,
               indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
               tabAlignment: TabAlignment.start,
               isScrollable: true,
               padding: EdgeInsets.zero,
