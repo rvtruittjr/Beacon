@@ -13,7 +13,8 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
   return authState.whenOrNull(
         data: (state) => state.session != null,
       ) ??
-      false;
+      // While the stream is loading, check the existing session
+      ref.read(supabaseClientProvider).auth.currentSession != null;
 });
 
 final hasCompletedOnboardingProvider = FutureProvider<bool>((ref) async {

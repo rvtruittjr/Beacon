@@ -29,7 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     refreshListenable: authNotifier,
-    initialLocation: '/login',
+    initialLocation: ref.read(isAuthenticatedProvider) ? '/app/snapshot' : '/login',
     redirect: (context, state) {
       final isAuthenticated = ref.read(isAuthenticatedProvider);
       final isOnAuthPage = state.matchedLocation == '/login' ||
