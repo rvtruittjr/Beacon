@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
+import '../../../../core/config/app_theme.dart';
 import 'onboarding_state.dart';
 import 'step_welcome.dart';
 import 'step_brand_colors.dart';
@@ -46,30 +47,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress dots
-            const SizedBox(height: 20),
-            _ProgressDots(currentStep: currentStep, totalSteps: 6),
-            // Page content
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: const [
-                  StepWelcome(),
-                  StepBrandColors(),
-                  StepBrandFonts(),
-                  StepUploadLogo(),
-                  StepYourVoice(),
-                  StepDone(),
-                ],
+    return Theme(
+      data: AppTheme.dark(),
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Progress dots
+              const SizedBox(height: 20),
+              _ProgressDots(currentStep: currentStep, totalSteps: 6),
+              // Page content
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: const [
+                    StepWelcome(),
+                    StepBrandColors(),
+                    StepBrandFonts(),
+                    StepUploadLogo(),
+                    StepYourVoice(),
+                    StepDone(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

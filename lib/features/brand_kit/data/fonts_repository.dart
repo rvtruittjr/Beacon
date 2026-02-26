@@ -28,6 +28,7 @@ class FontsRepository {
     String? label,
     String? weight,
     String? source,
+    String? url,
   }) async {
     try {
       final response = await SupabaseService.client
@@ -38,6 +39,7 @@ class FontsRepository {
             'label': label,
             'weight': weight,
             'source': source,
+            if (url != null) 'url': url,
           })
           .select()
           .single();

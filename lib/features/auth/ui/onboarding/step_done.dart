@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../brands/providers/brand_provider.dart';
@@ -48,14 +49,24 @@ class _StepDoneState extends ConsumerState<StepDone> {
       }
 
       // Save brand fonts
+      final user = client.auth.currentUser;
       for (var i = 0; i < data.selectedFonts.length; i++) {
         final font = data.selectedFonts[i];
+        String? fontUrl;
+        if (font.source == 'upload' && font.file != null && user != null) {
+          fontUrl = await StorageService.uploadFont(
+            user.id,
+            brandId,
+            font.file!,
+          );
+        }
         await client.from('brand_fonts').insert({
           'brand_id': brandId,
           'family': font.family,
           'label': font.label,
           'weight': font.weight,
-          'source': 'google',
+          'source': font.source,
+          if (fontUrl != null) 'url': fontUrl,
           'sort_order': i,
         });
       }
@@ -70,7 +81,6 @@ class _StepDoneState extends ConsumerState<StepDone> {
 
       // Upload logo if selected
       if (data.logoFile != null && data.logoFile!.bytes != null) {
-        final user = client.auth.currentUser;
         if (user != null) {
           final path =
               '${user.id}/$brandId/assets/logo/${data.logoFile!.name}';

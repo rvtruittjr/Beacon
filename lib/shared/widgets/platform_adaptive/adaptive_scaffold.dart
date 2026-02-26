@@ -353,17 +353,10 @@ class _MobileLayout extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => context.go(item.path),
                   behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
+                      horizontal: AppSpacing.sm,
                       vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? AppColors.blockLime
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.all(AppRadius.md),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -372,7 +365,7 @@ class _MobileLayout extends StatelessWidget {
                           item.icon,
                           size: 22,
                           color: isActive
-                              ? AppColors.textOnLime
+                              ? AppColors.blockLime
                               : AppColors.sidebarMuted,
                         ),
                         const SizedBox(height: 2),
@@ -384,7 +377,7 @@ class _MobileLayout extends StatelessWidget {
                                 ? FontWeight.w600
                                 : FontWeight.w400,
                             color: isActive
-                                ? AppColors.textOnLime
+                                ? AppColors.blockLime
                                 : AppColors.sidebarMuted,
                           ),
                         ),

@@ -1,5 +1,5 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide StorageException;
 
 import '../errors/app_exception.dart';
 import '../errors/error_handler.dart';
@@ -39,6 +39,15 @@ class StorageService {
     final ext = file.extension ?? 'mp4';
     final path = '$userId/$brandId/archive/$contentId/video.$ext';
     return _upload('archive-media', path, file);
+  }
+
+  static Future<String> uploadFont(
+    String userId,
+    String brandId,
+    PlatformFile file,
+  ) async {
+    final path = '$userId/$brandId/fonts/${file.name}';
+    return _upload('brand-assets', path, file);
   }
 
   static Future<void> deleteFile(String bucket, String path) async {

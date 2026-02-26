@@ -7,11 +7,15 @@ class OnboardingFont {
   final String family;
   final String? label;
   final String? weight;
+  final String source; // 'google' or 'upload'
+  final PlatformFile? file; // non-null when source == 'upload'
 
   const OnboardingFont({
     required this.family,
     this.label,
     this.weight,
+    this.source = 'google',
+    this.file,
   });
 }
 

@@ -1,6 +1,8 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
@@ -56,10 +58,40 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
             family: family,
             label: _selectedLabel,
             weight: '600',
+            source: 'google',
           ),
         );
 
     _familyController.clear();
+    setState(() => _selectedLabel = null);
+  }
+
+  Future<void> _uploadFont() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['ttf', 'otf', 'woff', 'woff2'],
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    // Derive family name from filename (strip extension)
+    final familyName = file.name
+        .replaceAll(RegExp(r'\.(ttf|otf|woff2?)$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'[-_]'), ' ')
+        .trim();
+
+    ref.read(onboardingProvider.notifier).addFont(
+          OnboardingFont(
+            family: familyName,
+            label: _selectedLabel,
+            weight: '400',
+            source: 'upload',
+            file: file,
+          ),
+        );
+
     setState(() => _selectedLabel = null);
   }
 
@@ -219,6 +251,37 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                   ],
                 ),
 
+                const SizedBox(height: AppSpacing.md),
+
+                // Upload font button
+                OutlinedButton.icon(
+                  onPressed: _uploadFont,
+                  icon: const Icon(LucideIcons.upload, size: 16),
+                  label: const Text('Upload a font file'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimaryDark,
+                    side: BorderSide(
+                      color: AppColors.borderDark,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(AppRadius.full),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Supports .ttf, .otf, .woff, .woff2',
+                  style: AppFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.mutedDark,
+                  ),
+                ),
+
                 const SizedBox(height: AppSpacing.lg),
 
                 // Preview of selected fonts
@@ -226,22 +289,34 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                   ...fonts.asMap().entries.map((entry) {
                     final index = entry.key;
                     final font = entry.value;
+                    final isUploaded = font.source == 'upload';
+
                     TextStyle fontStyle;
-                    try {
-                      fontStyle = GoogleFonts.getFont(
-                        font.family,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimaryDark,
-                      );
-                    } catch (_) {
+                    if (isUploaded) {
                       fontStyle = TextStyle(
                         fontFamily: font.family,
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimaryDark,
                       );
+                    } else {
+                      try {
+                        fontStyle = GoogleFonts.getFont(
+                          font.family,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimaryDark,
+                        );
+                      } catch (_) {
+                        fontStyle = TextStyle(
+                          fontFamily: font.family,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimaryDark,
+                        );
+                      }
                     }
+
                     return Padding(
                       padding:
                           const EdgeInsets.only(bottom: AppSpacing.md),
@@ -252,14 +327,50 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(font.family, style: fontStyle),
-                                if (font.label != null)
-                                  Text(
-                                    font.label!,
-                                    style: AppFonts.inter(
-                                      fontSize: 12,
-                                      color: AppColors.blockLime,
-                                    ),
-                                  ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    if (font.label != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            right: AppSpacing.sm),
+                                        child: Text(
+                                          font.label!,
+                                          style: AppFonts.inter(
+                                            fontSize: 12,
+                                            color: AppColors.blockLime,
+                                          ),
+                                        ),
+                                      ),
+                                    if (isUploaded)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            LucideIcons.upload,
+                                            size: 11,
+                                            color: AppColors.mutedDark,
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            'Uploaded',
+                                            style: AppFonts.inter(
+                                              fontSize: 11,
+                                              color: AppColors.mutedDark,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else
+                                      Text(
+                                        'Google Fonts',
+                                        style: AppFonts.inter(
+                                          fontSize: 11,
+                                          color: AppColors.mutedDark,
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -279,7 +390,7 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
                     child: Text(
-                      'Type a font name or pick from the suggestions above.',
+                      'Type a font name, pick from suggestions, or upload a font file.',
                       style: AppFonts.inter(
                         fontSize: 13,
                         color: AppColors.mutedDark,

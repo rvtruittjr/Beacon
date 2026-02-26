@@ -1,10 +1,13 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -88,9 +91,21 @@ class FontTab extends ConsumerWidget {
       context: context,
       child: _FontDialog(
         existing: existing,
-        onSave: (family, label, weight, source) async {
+        onSave: (family, label, weight, source, {PlatformFile? file}) async {
           final brandId = ref.read(currentBrandProvider);
           if (brandId == null) return;
+
+          String? fontUrl;
+          if (source == 'upload' && file != null) {
+            final user = SupabaseService.client.auth.currentUser;
+            if (user != null) {
+              fontUrl = await StorageService.uploadFont(
+                user.id,
+                brandId,
+                file,
+              );
+            }
+          }
 
           if (existing != null) {
             await ref.read(fontsRepositoryProvider).updateFont(
@@ -107,6 +122,7 @@ class FontTab extends ConsumerWidget {
                   label: label,
                   weight: weight,
                   source: source,
+                  url: fontUrl,
                 );
           }
           ref.invalidate(brandFontsProvider);
@@ -184,7 +200,9 @@ class _FontRowState extends State<_FontRow> {
                       if (widget.font.label != null)
                         const SizedBox(width: AppSpacing.sm),
                       Text(
-                        widget.font.source ?? 'Google Fonts',
+                        widget.font.source == 'upload'
+                            ? 'Uploaded'
+                            : 'Google Fonts',
                         style:
                             AppFonts.inter(fontSize: 12, color: mutedColor),
                       ),
@@ -220,8 +238,9 @@ class _FontDialog extends StatefulWidget {
     String family,
     String? label,
     String? weight,
-    String? source,
-  ) onSave;
+    String? source, {
+    PlatformFile? file,
+  }) onSave;
 
   @override
   State<_FontDialog> createState() => _FontDialogState();
@@ -232,6 +251,8 @@ class _FontDialogState extends State<_FontDialog> {
   String? _selectedLabel;
   String? _selectedWeight;
   bool _saving = false;
+  bool _isUploadMode = false;
+  PlatformFile? _pickedFile;
 
   static const _labels = ['Heading', 'Body', 'Display', 'Caption', 'Accent'];
   static const _weights = ['400', '500', '600', '700', '800'];
@@ -268,12 +289,31 @@ class _FontDialogState extends State<_FontDialog> {
     );
     _selectedLabel = widget.existing?.label;
     _selectedWeight = widget.existing?.weight;
+    _isUploadMode = widget.existing?.source == 'upload';
   }
 
   @override
   void dispose() {
     _familyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFontFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['ttf', 'otf', 'woff', 'woff2'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    final familyName = file.name
+        .replaceAll(RegExp(r'\.(ttf|otf|woff2?)$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'[-_]'), ' ')
+        .trim();
+    setState(() {
+      _pickedFile = file;
+      _familyController.text = familyName;
+    });
   }
 
   @override
@@ -286,24 +326,38 @@ class _FontDialogState extends State<_FontDialog> {
 
     // Live preview
     TextStyle previewStyle;
-    try {
-      final weight = _selectedWeight != null
-          ? FontWeight.values[(_weights.indexOf(_selectedWeight!) * 100 ~/ 100)
-              .clamp(0, FontWeight.values.length - 1)]
-          : FontWeight.w400;
-      previewStyle = GoogleFonts.getFont(
-        _familyController.text,
-        fontSize: 24,
-        color: textColor,
-        fontWeight: weight,
-      );
-    } catch (_) {
+    if (_isUploadMode) {
       previewStyle = TextStyle(
+        fontFamily: _familyController.text,
         fontSize: 24,
-        color: mutedColor,
-        fontStyle: FontStyle.italic,
+        color: _pickedFile != null ? textColor : mutedColor,
+        fontStyle: _pickedFile != null ? null : FontStyle.italic,
       );
+    } else {
+      try {
+        final weight = _selectedWeight != null
+            ? FontWeight
+                .values[(_weights.indexOf(_selectedWeight!) * 100 ~/ 100)
+                    .clamp(0, FontWeight.values.length - 1)]
+            : FontWeight.w400;
+        previewStyle = GoogleFonts.getFont(
+          _familyController.text,
+          fontSize: 24,
+          color: textColor,
+          fontWeight: weight,
+        );
+      } catch (_) {
+        previewStyle = TextStyle(
+          fontSize: 24,
+          color: mutedColor,
+          fontStyle: FontStyle.italic,
+        );
+      }
     }
+
+    final bool canSave = _isUploadMode
+        ? (_familyController.text.trim().isNotEmpty && _pickedFile != null)
+        : _familyController.text.trim().isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -320,40 +374,124 @@ class _FontDialogState extends State<_FontDialog> {
             widget.existing != null ? 'Edit Font' : 'Add Font',
             style: AppFonts.clashDisplay(fontSize: 24, color: textColor),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          // Font family with autocomplete
-          Autocomplete<String>(
-            initialValue: _familyController.value,
-            optionsBuilder: (textEditingValue) {
-              if (textEditingValue.text.isEmpty) return const [];
-              final query = textEditingValue.text.toLowerCase();
-              return _suggestedFonts
-                  .where((f) => f.toLowerCase().contains(query))
-                  .toList();
-            },
-            onSelected: (value) {
-              _familyController.text = value;
-              setState(() {});
-            },
-            fieldViewBuilder:
-                (context, controller, focusNode, onFieldSubmitted) {
-              // Sync our controller with autocomplete's controller
-              controller.addListener(() {
-                if (_familyController.text != controller.text) {
-                  _familyController.text = controller.text;
-                  setState(() {});
-                }
-              });
-              return TextField(
-                controller: controller,
-                focusNode: focusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Font family',
-                  hintText: 'e.g. Inter, Poppins',
+          const SizedBox(height: AppSpacing.md),
+          // Source toggle
+          if (widget.existing == null) ...[
+            Row(
+              children: [
+                _SourceToggle(
+                  label: 'Google Fonts',
+                  isSelected: !_isUploadMode,
+                  onTap: () => setState(() {
+                    _isUploadMode = false;
+                    _pickedFile = null;
+                    _familyController.clear();
+                  }),
                 ),
-              );
-            },
-          ),
+                const SizedBox(width: AppSpacing.sm),
+                _SourceToggle(
+                  label: 'Upload',
+                  isSelected: _isUploadMode,
+                  onTap: () => setState(() {
+                    _isUploadMode = true;
+                    _familyController.clear();
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+
+          if (_isUploadMode) ...[
+            // Upload mode
+            if (_pickedFile != null)
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.surfaceMidDark
+                      : AppColors.surfaceMidLight,
+                  borderRadius: BorderRadius.all(AppRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.fileText, size: 18, color: mutedColor),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        _pickedFile!.name,
+                        style: AppFonts.inter(fontSize: 13, color: textColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() {
+                        _pickedFile = null;
+                        _familyController.clear();
+                      }),
+                      icon: Icon(Icons.close, size: 16, color: mutedColor),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: _pickFontFile,
+                icon: const Icon(LucideIcons.upload, size: 16),
+                label: const Text('Choose font file'),
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Supports .ttf, .otf, .woff, .woff2',
+              style: AppFonts.inter(fontSize: 11, color: mutedColor),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Font family name
+            TextField(
+              controller: _familyController,
+              decoration: const InputDecoration(
+                labelText: 'Font family name',
+                hintText: 'e.g. My Custom Font',
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ] else ...[
+            // Google Fonts mode
+            Autocomplete<String>(
+              initialValue: _familyController.value,
+              optionsBuilder: (textEditingValue) {
+                if (textEditingValue.text.isEmpty) return const [];
+                final query = textEditingValue.text.toLowerCase();
+                return _suggestedFonts
+                    .where((f) => f.toLowerCase().contains(query))
+                    .toList();
+              },
+              onSelected: (value) {
+                _familyController.text = value;
+                setState(() {});
+              },
+              fieldViewBuilder:
+                  (context, controller, focusNode, onFieldSubmitted) {
+                controller.addListener(() {
+                  if (_familyController.text != controller.text) {
+                    _familyController.text = controller.text;
+                    setState(() {});
+                  }
+                });
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  decoration: const InputDecoration(
+                    labelText: 'Font family',
+                    hintText: 'e.g. Inter, Poppins',
+                  ),
+                );
+              },
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           // Label dropdown
           DropdownButtonFormField<String>(
@@ -390,9 +528,7 @@ class _FontDialogState extends State<_FontDialog> {
           AppButton(
             label: widget.existing != null ? 'Save' : 'Add',
             isLoading: _saving,
-            onPressed: _familyController.text.trim().isEmpty || _saving
-                ? null
-                : _save,
+            onPressed: !canSave || _saving ? null : _save,
             isFullWidth: true,
           ),
         ],
@@ -403,15 +539,67 @@ class _FontDialogState extends State<_FontDialog> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await widget.onSave(
-        _familyController.text.trim(),
-        _selectedLabel,
-        _selectedWeight,
-        'google',
-      );
+      if (_isUploadMode && _pickedFile != null) {
+        await widget.onSave(
+          _familyController.text.trim(),
+          _selectedLabel,
+          _selectedWeight,
+          'upload',
+          file: _pickedFile,
+        );
+      } else {
+        await widget.onSave(
+          _familyController.text.trim(),
+          _selectedLabel,
+          _selectedWeight,
+          'google',
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+}
+
+class _SourceToggle extends StatelessWidget {
+  const _SourceToggle({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.blockLime
+              : (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
+          borderRadius: BorderRadius.all(AppRadius.full),
+        ),
+        child: Text(
+          label,
+          style: AppFonts.inter(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected
+                ? AppColors.textOnLime
+                : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
+          ),
+        ),
+      ),
+    );
   }
 }
