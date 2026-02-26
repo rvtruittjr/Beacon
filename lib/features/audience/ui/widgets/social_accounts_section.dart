@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -360,7 +358,6 @@ class _AccountDialogState extends State<_AccountDialog> {
   late final TextEditingController _followerController;
   bool _saving = false;
   bool _fetching = false;
-  Timer? _fetchDebounce;
 
   @override
   void initState() {
@@ -378,7 +375,6 @@ class _AccountDialogState extends State<_AccountDialog> {
 
   @override
   void dispose() {
-    _fetchDebounce?.cancel();
     _usernameController.removeListener(_onUsernameChanged);
     _usernameController.dispose();
     _displayNameController.dispose();
@@ -388,12 +384,6 @@ class _AccountDialogState extends State<_AccountDialog> {
 
   void _onUsernameChanged() {
     setState(() {}); // rebuild to update button state
-    _fetchDebounce?.cancel();
-    final username = _usernameController.text.trim();
-    if (username.length < 2) return;
-    // Only auto-fetch for new accounts or if username changed from existing
-    if (widget.existing != null && username == widget.existing!.username) return;
-    _fetchDebounce = Timer(const Duration(milliseconds: 800), _fetchStats);
   }
 
   Future<void> _fetchStats() async {
@@ -461,16 +451,7 @@ class _AccountDialogState extends State<_AccountDialog> {
                 .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                 .toList(),
             onChanged: (v) {
-              if (v != null) {
-                setState(() => _selectedPlatform = v);
-                // Re-fetch if username already entered
-                final username = _usernameController.text.trim();
-                if (username.length >= 2) {
-                  _fetchDebounce?.cancel();
-                  _fetchDebounce =
-                      Timer(const Duration(milliseconds: 300), _fetchStats);
-                }
-              }
+              if (v != null) setState(() => _selectedPlatform = v);
             },
           ),
           const SizedBox(height: AppSpacing.md),
@@ -494,35 +475,21 @@ class _AccountDialogState extends State<_AccountDialog> {
           TextField(
             controller: _followerController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Followers / Subscribers',
-              hintText: 'e.g. 12500',
-              suffixIcon: _fetching
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
+            decoration: const InputDecoration(
+              labelText: 'Followers / Subscribers (auto-fetched)',
+              hintText: 'Leave blank to auto-fetch',
             ),
           ),
-          if (_fetching)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                'Looking up follower count…',
-                style: AppFonts.inter(fontSize: 11, color: mutedColor),
-              ),
-            ),
           const SizedBox(height: AppSpacing.lg),
           AppButton(
-            label: widget.existing != null ? 'Save' : 'Add',
-            isLoading: _saving,
+            label: _fetching
+                ? 'Fetching stats…'
+                : _saving
+                    ? 'Saving…'
+                    : (widget.existing != null ? 'Save' : 'Add'),
+            isLoading: _saving || _fetching,
             onPressed:
-                _usernameController.text.trim().isEmpty || _saving
+                _usernameController.text.trim().isEmpty || _saving || _fetching
                     ? null
                     : _save,
             isFullWidth: true,
