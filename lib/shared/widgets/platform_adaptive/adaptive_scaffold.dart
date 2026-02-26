@@ -32,6 +32,14 @@ const _mobileNavItems = [
   _NavItem('Kit', LucideIcons.palette, '/app/brand-kit'),
   _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
   _NavItem('Archive', LucideIcons.archive, '/app/archive'),
+  _NavItem('More', LucideIcons.menu, ''),
+];
+
+const _moreSheetItems = [
+  _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
+  _NavItem('Audience', LucideIcons.users, '/app/audience'),
+  _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
+  _NavItem('Sharing', LucideIcons.share2, '/app/sharing'),
   _NavItem('Settings', LucideIcons.settings, '/app/settings'),
 ];
 
@@ -322,8 +330,13 @@ class _MobileLayout extends StatelessWidget {
     final currentPath = GoRouterState.of(context).matchedLocation;
 
     int currentIndex = _mobileNavItems
-        .indexWhere((item) => currentPath == item.path);
-    if (currentIndex < 0) currentIndex = 0;
+        .indexWhere((item) => item.path.isNotEmpty && currentPath == item.path);
+    if (currentIndex < 0) {
+      // Check if current path is a "More" screen
+      final isMoreScreen =
+          _moreSheetItems.any((item) => currentPath == item.path);
+      currentIndex = isMoreScreen ? _mobileNavItems.length - 1 : 0;
+    }
 
     return Scaffold(
       extendBody: true,
@@ -355,7 +368,13 @@ class _MobileLayout extends StatelessWidget {
                 final isActive = index == currentIndex;
 
                 return GestureDetector(
-                  onTap: () => context.go(item.path),
+                  onTap: () {
+                    if (item.path.isEmpty) {
+                      _showMoreSheet(context, currentPath);
+                    } else {
+                      context.go(item.path);
+                    }
+                  },
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -396,4 +415,87 @@ class _MobileLayout extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showMoreSheet(BuildContext context, String currentPath) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.md, 0, AppSpacing.md, AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.sidebarBg,
+        borderRadius: BorderRadius.all(AppRadius.xl),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.sidebarMuted,
+                  borderRadius: BorderRadius.all(AppRadius.full),
+                ),
+              ),
+              ..._moreSheetItems.map((item) {
+                final isActive = currentPath == item.path;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    context.go(item.path);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 48,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppColors.blockLime
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.all(AppRadius.md),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          item.icon,
+                          size: 20,
+                          color: isActive
+                              ? AppColors.textOnLime
+                              : AppColors.sidebarMuted,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          item.label,
+                          style: AppFonts.inter(
+                            fontSize: 15,
+                            fontWeight:
+                                isActive ? FontWeight.w600 : FontWeight.w500,
+                            color: isActive
+                                ? AppColors.textOnLime
+                                : AppColors.sidebarText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

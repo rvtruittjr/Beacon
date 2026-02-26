@@ -8,6 +8,7 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/errors/app_exception.dart';
 import '../providers/auth_provider.dart';
 import 'widgets/auth_form.dart';
+import 'widgets/forgot_password_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -176,7 +177,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () => ForgotPasswordDialog.show(
+                context,
+                initialEmail: _emailController.text.trim(),
+              ),
               child: const Text('Forgot password?'),
             ),
           ),

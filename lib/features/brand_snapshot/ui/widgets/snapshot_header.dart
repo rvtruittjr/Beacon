@@ -7,10 +7,16 @@ import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/extensions/datetime_extensions.dart';
 import '../../../brands/models/brand_model.dart';
+import '../../../brands/ui/edit_brand_dialog.dart';
 
 class SnapshotHeader extends StatelessWidget {
-  const SnapshotHeader({super.key, required this.brand});
+  const SnapshotHeader({
+    super.key,
+    required this.brand,
+    this.onExportPdf,
+  });
   final BrandModel brand;
+  final VoidCallback? onExportPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +67,22 @@ class SnapshotHeader extends StatelessWidget {
               ],
             ),
           ),
+          AppButton(
+            label: null,
+            icon: LucideIcons.pencil,
+            variant: AppButtonVariant.icon,
+            onPressed: () => EditBrandDialog.show(context, brand),
+          ),
+          if (onExportPdf != null) ...[
+            const SizedBox(width: AppSpacing.xs),
+            AppButton(
+              label: null,
+              icon: LucideIcons.fileText,
+              variant: AppButtonVariant.icon,
+              onPressed: onExportPdf,
+            ),
+          ],
+          const SizedBox(width: AppSpacing.xs),
           AppButton(
             label: 'Share',
             icon: LucideIcons.share2,

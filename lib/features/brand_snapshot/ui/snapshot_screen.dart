@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
@@ -21,6 +22,7 @@ import 'widgets/content_pillars_section.dart';
 import 'widgets/top_content_section.dart';
 import 'widgets/brand_health_card.dart';
 import '../models/brand_health_score.dart';
+import '../services/pdf_export_service.dart';
 
 class SnapshotScreen extends ConsumerWidget {
   const SnapshotScreen({super.key});
@@ -46,7 +48,10 @@ class SnapshotScreen extends ConsumerWidget {
         final healthScore = BrandHealthScore.fromSnapshotData(data);
 
         final sections = <Widget>[
-          SnapshotHeader(brand: data.brand),
+          SnapshotHeader(
+            brand: data.brand,
+            onExportPdf: () => _exportPdf(context, data),
+          ),
           BrandHealthCard(score: healthScore),
           ColorPaletteSection(colors: data.colors),
           TypographySection(fonts: data.fonts),
@@ -95,6 +100,26 @@ class SnapshotScreen extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+Future<void> _exportPdf(BuildContext context, SnapshotData data) async {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Generating PDF...')),
+  );
+
+  try {
+    final bytes = await PdfExportService.generate(data);
+    await Printing.layoutPdf(
+      onLayout: (_) => bytes,
+      name: '${data.brand.name} - Brand Guidelines',
+    );
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to generate PDF: $e')),
+      );
+    }
   }
 }
 
