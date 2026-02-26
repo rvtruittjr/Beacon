@@ -29,13 +29,13 @@ class AppCard extends StatelessWidget {
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     if (variant == AppCardVariant.feature && blockColor != null) {
-      return _buildFeatureCard(surfaceColor, borderColor);
+      return _buildFeatureCard(surfaceColor, borderColor, isDark);
     }
 
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.all(AppRadius.md),
+        borderRadius: BorderRadius.all(AppRadius.xl),
         border: Border.all(color: borderColor, width: 1),
       ),
       padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
@@ -43,38 +43,55 @@ class AppCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard(Color surfaceColor, Color borderColor) {
-    // Determine text color based on block color luminance
-    final textOnBlock = blockColor!.computeLuminance() > 0.5
-        ? const Color(0xFF1A1A1A)
-        : const Color(0xFFFFFFFF);
+  Widget _buildFeatureCard(
+    Color surfaceColor,
+    Color borderColor,
+    bool isDark,
+  ) {
+    final textColor =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.all(AppRadius.md),
+        borderRadius: BorderRadius.all(AppRadius.xl),
         border: Border.all(color: borderColor, width: 1),
+        boxShadow: isDark ? null : AppShadows.sm,
       ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Color block header
-          Container(
-            height: 100,
-            color: blockColor,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: headerTitle != null
-                ? Text(
+          // Clean header row
+          if (headerTitle != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: blockColor,
+                      borderRadius: BorderRadius.all(AppRadius.xs),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
                     headerTitle!,
                     style: AppFonts.clashDisplay(
-                      fontSize: 24,
-                      color: textOnBlock,
+                      fontSize: 18,
+                      color: textColor,
                     ),
-                  )
-                : null,
-          ),
+                  ),
+                ],
+              ),
+            ),
           // Card body
           Padding(
             padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
