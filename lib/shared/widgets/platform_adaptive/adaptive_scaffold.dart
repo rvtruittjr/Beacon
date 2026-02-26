@@ -325,20 +325,24 @@ class _MobileLayout extends StatelessWidget {
     if (currentIndex < 0) currentIndex = 0;
 
     return Scaffold(
+      extendBody: true,
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.sidebarBg,
-          borderRadius: const BorderRadius.vertical(
-            top: AppRadius.xl,
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(
+            AppSpacing.md, 0, AppSpacing.md, AppSpacing.md,
           ),
-        ),
-        child: SafeArea(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.sidebarBg,
+            borderRadius: BorderRadius.all(AppRadius.full),
+            boxShadow: AppShadows.lg,
+          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
-            ),
+            padding: EdgeInsets.zero,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _mobileNavItems.asMap().entries.map((entry) {
