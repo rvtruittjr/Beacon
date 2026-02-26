@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -82,6 +85,16 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
         .replaceAll(RegExp(r'[-_]'), ' ')
         .trim();
 
+    // Register font so the preview renders correctly.
+    if (file.bytes != null) {
+      final loader = FontLoader(familyName);
+      loader.addFont(
+        Future.value(ByteData.view(file.bytes!.buffer)),
+      );
+      await loader.load();
+    }
+
+    if (!mounted) return;
     ref.read(onboardingProvider.notifier).addFont(
           OnboardingFont(
             family: familyName,

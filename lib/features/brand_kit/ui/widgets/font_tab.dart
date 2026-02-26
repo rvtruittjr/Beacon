@@ -1,11 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/services/custom_font_loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -156,6 +160,29 @@ class _FontRow extends StatefulWidget {
 
 class _FontRowState extends State<_FontRow> {
   bool _isHovered = false;
+  bool _fontLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomFont();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FontRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.font.url != widget.font.url) _loadCustomFont();
+  }
+
+  Future<void> _loadCustomFont() async {
+    if (widget.font.source != 'upload' || widget.font.url == null) return;
+    if (CustomFontLoader.isLoaded(widget.font.family)) {
+      _fontLoaded = true;
+      return;
+    }
+    await CustomFontLoader.load(widget.font.family, widget.font.url!);
+    if (mounted) setState(() => _fontLoaded = true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,18 +193,26 @@ class _FontRowState extends State<_FontRow> {
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
     TextStyle familyStyle;
-    try {
-      familyStyle = GoogleFonts.getFont(
-        widget.font.family,
-        fontSize: 36,
-        color: textColor,
-      );
-    } catch (_) {
+    if (widget.font.source == 'upload') {
       familyStyle = TextStyle(
-        fontFamily: widget.font.family,
+        fontFamily: _fontLoaded ? widget.font.family : null,
         fontSize: 36,
         color: textColor,
       );
+    } else {
+      try {
+        familyStyle = GoogleFonts.getFont(
+          widget.font.family,
+          fontSize: 36,
+          color: textColor,
+        );
+      } catch (_) {
+        familyStyle = TextStyle(
+          fontFamily: widget.font.family,
+          fontSize: 36,
+          color: textColor,
+        );
+      }
     }
 
     return MouseRegion(
@@ -310,6 +345,17 @@ class _FontDialogState extends State<_FontDialog> {
         .replaceAll(RegExp(r'\.(ttf|otf|woff2?)$', caseSensitive: false), '')
         .replaceAll(RegExp(r'[-_]'), ' ')
         .trim();
+
+    // Register font immediately so the preview renders correctly.
+    if (file.bytes != null) {
+      final loader = FontLoader(familyName);
+      loader.addFont(
+        Future.value(ByteData.view(file.bytes!.buffer)),
+      );
+      await loader.load();
+    }
+
+    if (!mounted) return;
     setState(() {
       _pickedFile = file;
       _familyController.text = familyName;
