@@ -20,23 +20,16 @@ class AudienceRepository {
     }
   }
 
-  Future<AudienceModel> upsertAudience(
+  /// Upsert audience data. Throws on failure (caller must handle).
+  Future<void> upsertAudience(
     String brandId,
     AudienceModel audience,
   ) async {
-    try {
-      final data = audience.toJson();
-      data['brand_id'] = brandId;
+    final data = audience.toJson();
+    data['brand_id'] = brandId;
 
-      final response = await SupabaseService.client
-          .from('brand_audience')
-          .upsert(data, onConflict: 'brand_id')
-          .select()
-          .single();
-
-      return AudienceModel.fromJson(response);
-    } catch (e, stack) {
-      ErrorHandler.throwHandled(e, stack);
-    }
+    await SupabaseService.client
+        .from('brand_audience')
+        .upsert(data, onConflict: 'brand_id');
   }
 }

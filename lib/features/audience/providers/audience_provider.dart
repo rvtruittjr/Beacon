@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
@@ -33,7 +34,7 @@ final audienceProvider =
   return ref.watch(audienceRepositoryProvider).getAudience(brandId);
 });
 
-/// Notifier that holds in-memory audience state and auto-saves with 800ms debounce.
+/// Notifier that holds in-memory audience state with explicit save.
 class AudienceEditorNotifier extends StateNotifier<AudienceModel> {
   AudienceEditorNotifier(
     this._repository,
@@ -43,58 +44,42 @@ class AudienceEditorNotifier extends StateNotifier<AudienceModel> {
 
   final AudienceRepository _repository;
   final String _brandId;
-  Timer? _debounce;
-  bool _dirty = false;
-  bool _seeding = false;
 
   /// Seed the notifier from DB data without triggering saves.
   void seed(AudienceModel data) {
-    _seeding = true;
     state = data.copyWith(brandId: _brandId);
-    _seeding = false;
   }
 
-  void _scheduleSave() {
-    if (_seeding || _brandId.isEmpty) return;
-    _dirty = true;
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 800), _flush);
-  }
-
-  Future<void> _flush() async {
-    if (!_dirty || _brandId.isEmpty) return;
-    _dirty = false;
+  /// Explicitly save the current state to Supabase.
+  /// Returns null on success, or an error message on failure.
+  Future<String?> save() async {
+    if (_brandId.isEmpty) return 'No brand selected';
     try {
       await _repository.upsertAudience(_brandId, state);
+      return null; // success
     } catch (e) {
-      // Mark dirty again so the next edit retries.
-      _dirty = true;
+      return e.toString();
     }
   }
 
   void setPersonaName(String value) {
     state = state.copyWith(personaName: value);
-    _scheduleSave();
   }
 
   void setPersonaSummary(String value) {
     state = state.copyWith(personaSummary: value);
-    _scheduleSave();
   }
 
   void setAgeRangeMin(int? value) {
     state = state.copyWith(ageRangeMin: value);
-    _scheduleSave();
   }
 
   void setAgeRangeMax(int? value) {
     state = state.copyWith(ageRangeMax: value);
-    _scheduleSave();
   }
 
   void setGenderSkew(String? value) {
     state = state.copyWith(genderSkew: value);
-    _scheduleSave();
   }
 
   // ─── Tag list operations ──────────────────────────────────────
@@ -102,58 +87,40 @@ class AudienceEditorNotifier extends StateNotifier<AudienceModel> {
   void addLocation(String value) {
     final updated = List<String>.from(state.locations)..add(value);
     state = state.copyWith(locations: updated);
-    _scheduleSave();
   }
 
   void removeLocation(String value) {
     final updated = List<String>.from(state.locations)..remove(value);
     state = state.copyWith(locations: updated);
-    _scheduleSave();
   }
 
   void addInterest(String value) {
     final updated = List<String>.from(state.interests)..add(value);
     state = state.copyWith(interests: updated);
-    _scheduleSave();
   }
 
   void removeInterest(String value) {
     final updated = List<String>.from(state.interests)..remove(value);
     state = state.copyWith(interests: updated);
-    _scheduleSave();
   }
 
   void addPainPoint(String value) {
     final updated = List<String>.from(state.painPoints)..add(value);
     state = state.copyWith(painPoints: updated);
-    _scheduleSave();
   }
 
   void removePainPoint(String value) {
     final updated = List<String>.from(state.painPoints)..remove(value);
     state = state.copyWith(painPoints: updated);
-    _scheduleSave();
   }
 
   void addGoal(String value) {
     final updated = List<String>.from(state.goals)..add(value);
     state = state.copyWith(goals: updated);
-    _scheduleSave();
   }
 
   void removeGoal(String value) {
     final updated = List<String>.from(state.goals)..remove(value);
     state = state.copyWith(goals: updated);
-    _scheduleSave();
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    // Flush any pending save before disposing.
-    if (_dirty && _brandId.isNotEmpty) {
-      _repository.upsertAudience(_brandId, state);
-    }
-    super.dispose();
   }
 }

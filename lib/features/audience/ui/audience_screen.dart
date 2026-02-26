@@ -18,7 +18,8 @@ final audienceEditorProvider =
         (ref) {
   final brandId = ref.watch(currentBrandProvider) ?? '';
   final repo = ref.watch(audienceRepositoryProvider);
-  return AudienceEditorNotifier(repo, brandId, AudienceModel(brandId: brandId));
+  return AudienceEditorNotifier(
+      repo, brandId, AudienceModel(brandId: brandId));
 });
 
 class AudienceScreen extends ConsumerStatefulWidget {
@@ -71,6 +72,7 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
   bool _nameFocused = false;
   bool _summaryFocused = false;
   bool _dismissedEmpty = false;
+  bool _saving = false;
 
   static const _genderOptions = [
     'Mostly Female',
@@ -87,10 +89,10 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
         TextEditingController(text: widget.initial?.personaName ?? '');
     _summaryController =
         TextEditingController(text: widget.initial?.personaSummary ?? '');
-    _ageMinController =
-        TextEditingController(text: widget.initial?.ageRangeMin?.toString() ?? '');
-    _ageMaxController =
-        TextEditingController(text: widget.initial?.ageRangeMax?.toString() ?? '');
+    _ageMinController = TextEditingController(
+        text: widget.initial?.ageRangeMin?.toString() ?? '');
+    _ageMaxController = TextEditingController(
+        text: widget.initial?.ageRangeMax?.toString() ?? '');
   }
 
   @override
@@ -100,6 +102,36 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
     _ageMinController.dispose();
     _ageMaxController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSave() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    final notifier = ref.read(audienceEditorProvider.notifier);
+    final error = await notifier.save();
+
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (error == null) {
+      // Refresh the persisted data provider so next load is correct.
+      ref.invalidate(audienceProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Audience saved'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Save failed: $error'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   @override
@@ -136,12 +168,24 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Header ──
-              Text(
-                'Your Audience',
-                style: AppFonts.clashDisplay(
-                  fontSize: 32,
-                  color: textColor,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Your Audience',
+                    style: AppFonts.clashDisplay(
+                      fontSize: 32,
+                      color: textColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  AppButton(
+                    label: _saving ? 'Saving…' : 'Save',
+                    icon: _saving ? null : LucideIcons.save,
+                    variant: AppButtonVariant.primary,
+                    isLoading: _saving,
+                    onPressed: _saving ? null : _handleSave,
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.x2l),
 
@@ -233,7 +277,9 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
                     children: [
                       Expanded(child: _buildAgeRange(mutedColor)),
                       const SizedBox(width: AppSpacing.lg),
-                      Expanded(child: _buildGenderSkew(audience, notifier, mutedColor)),
+                      Expanded(
+                          child: _buildGenderSkew(
+                              audience, notifier, mutedColor)),
                     ],
                   );
                 }
