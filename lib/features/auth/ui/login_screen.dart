@@ -117,13 +117,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   color: AppColors.blockLime,
                   borderRadius: BorderRadius.all(AppRadius.md),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'B',
-                    style: TextStyle(
-                      fontFamily: 'ClashDisplay',
+                    style: AppFonts.clashDisplay(
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
                       color: AppColors.textOnLime,
                     ),
                   ),

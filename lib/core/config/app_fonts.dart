@@ -6,12 +6,11 @@ class AppFonts {
 
   static TextStyle clashDisplay({
     double fontSize = 48,
-    FontWeight fontWeight = FontWeight.w700,
+    FontWeight fontWeight = FontWeight.w800,
     Color? color,
     double? height,
   }) {
-    return TextStyle(
-      fontFamily: 'ClashDisplay',
+    return GoogleFonts.plusJakartaSans(
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,

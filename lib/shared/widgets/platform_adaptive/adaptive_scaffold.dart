@@ -94,13 +94,11 @@ class _DesktopLayout extends ConsumerWidget {
                             color: AppColors.blockLime,
                             borderRadius: BorderRadius.all(AppRadius.sm),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               'B',
-                              style: TextStyle(
-                                fontFamily: 'ClashDisplay',
+                              style: AppFonts.clashDisplay(
                                 fontSize: 18,
-                                fontWeight: FontWeight.w700,
                                 color: AppColors.textOnLime,
                               ),
                             ),

@@ -195,12 +195,9 @@ class BrandSwitcher extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
+              // Clear the active brand immediately
+              ref.read(currentBrandProvider.notifier).state = null;
               await ref.read(brandRepositoryProvider).deleteBrand(brandId);
-
-              // If we deleted the active brand, switch to another or clear
-              if (ref.read(currentBrandProvider) == brandId) {
-                ref.read(currentBrandProvider.notifier).state = null;
-              }
               ref.invalidate(userBrandsProvider);
               ref.invalidate(activeBrandProvider);
             },
