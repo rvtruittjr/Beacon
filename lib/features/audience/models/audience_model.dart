@@ -28,8 +28,8 @@ class AudienceModel {
   });
 
   bool get isEmpty =>
-      personaName == null &&
-      personaSummary == null &&
+      (personaName == null || personaName!.isEmpty) &&
+      (personaSummary == null || personaSummary!.isEmpty) &&
       ageRangeMin == null &&
       ageRangeMax == null &&
       genderSkew == null &&

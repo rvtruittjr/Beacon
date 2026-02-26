@@ -14,7 +14,6 @@ const BROWSER_UA =
 function parseFollowerString(raw: string): number | null {
   if (!raw) return null
   const cleaned = raw.trim().replace(/,/g, '')
-  // Handle "1.2M", "12.5K", etc.
   const match = cleaned.match(/^([\d.]+)\s*([KkMmBb])?/)
   if (!match) return null
   let num = parseFloat(match[1])
@@ -48,129 +47,207 @@ interface SocialStats {
   display_name: string | null
 }
 
+const EMPTY: SocialStats = { follower_count: null, display_name: null }
+
 // ── Platform fetchers ──────────────────────────────────────────
 
 async function fetchInstagram(username: string): Promise<SocialStats> {
-  // Try fetching profile page – Instagram includes follower info in og:description
-  // e.g. "1.2M Followers, 500 Following, 300 Posts ..."
-  const url = `https://www.instagram.com/${username}/`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-  })
-  if (!res.ok) return { follower_count: null, display_name: null }
-  const html = await res.text()
+  // Strategy 1: Use Instagram's internal web profile info API
+  try {
+    const apiUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`
+    const apiRes = await fetch(apiUrl, {
+      headers: {
+        'User-Agent':
+          'Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; samsung; SM-G991B; o1s; exynos2100)',
+        'X-IG-App-ID': '936619743392459',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    if (apiRes.ok) {
+      const json = await apiRes.json()
+      const user = json?.data?.user
+      if (user) {
+        return {
+          follower_count: user.edge_followed_by?.count ?? null,
+          display_name: user.full_name || null,
+        }
+      }
+    }
+  } catch {
+    // Fall through to strategy 2
+  }
 
-  const ogDesc = extractMeta(html, 'og:description') || ''
-  // Pattern: "1,234 Followers" or "1.2M Followers"
-  const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
-  const followerCount = followerMatch
-    ? parseFollowerString(followerMatch[1])
-    : null
+  // Strategy 2: Scrape the profile page og:description meta tag
+  try {
+    const url = `https://www.instagram.com/${username}/`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept':
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return EMPTY
+    const html = await res.text()
 
-  const ogTitle = extractMeta(html, 'og:title') || ''
-  // og:title is usually "Display Name (@username) • Instagram photos and videos"
-  const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
-  const displayName = nameMatch ? nameMatch[1].trim() : null
+    const ogDesc = extractMeta(html, 'og:description') || ''
+    // "4,401 Followers, 2,651 Following, 571 Posts - See Instagram photos..."
+    const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
+    const followerCount = followerMatch
+      ? parseFollowerString(followerMatch[1])
+      : null
 
-  return { follower_count: followerCount, display_name: displayName }
+    // og:title: "Display Name (@username) • Instagram photos and videos"
+    const ogTitle = extractMeta(html, 'og:title') || ''
+    const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
+    // Also check og:description for name: "... from Display Name (@username)"
+    const descNameMatch = ogDesc.match(/from\s+(.+?)\s*\(/)
+    const displayName =
+      nameMatch?.[1]?.trim() || descNameMatch?.[1]?.trim() || null
+
+    return { follower_count: followerCount, display_name: displayName }
+  } catch {
+    return EMPTY
+  }
 }
 
 async function fetchTikTok(username: string): Promise<SocialStats> {
-  const url = `https://www.tiktok.com/@${username}`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-  })
-  if (!res.ok) return { follower_count: null, display_name: null }
-  const html = await res.text()
+  try {
+    const url = `https://www.tiktok.com/@${username}`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept':
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return EMPTY
+    const html = await res.text()
 
-  // TikTok often has follower count in a JSON-LD or script with __UNIVERSAL_DATA
-  // Try og:description: "username (@handle) on TikTok | 1.2M Followers..."
-  const ogDesc = extractMeta(html, 'og:description') || ''
-  const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
-  const followerCount = followerMatch
-    ? parseFollowerString(followerMatch[1])
-    : null
+    // Try to find follower data in embedded JSON (SIGI_STATE or UNIVERSAL_DATA)
+    const jsonMatch = html.match(
+      /"followerCount"\s*:\s*(\d+)/,
+    )
+    const followerCount = jsonMatch ? parseInt(jsonMatch[1], 10) : null
 
-  const ogTitle = extractMeta(html, 'og:title') || ''
-  const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
-  const displayName = nameMatch ? nameMatch[1].trim() : null
+    // Try nickname from embedded JSON
+    const nickMatch = html.match(/"nickname"\s*:\s*"([^"]+)"/)
+    let displayName = nickMatch ? nickMatch[1] : null
 
-  return { follower_count: followerCount, display_name: displayName }
+    // Fallback to og:description
+    if (!followerCount) {
+      const ogDesc = extractMeta(html, 'og:description') || ''
+      const ogMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
+      if (ogMatch) {
+        return {
+          follower_count: parseFollowerString(ogMatch[1]),
+          display_name: displayName,
+        }
+      }
+    }
+
+    if (!displayName) {
+      const ogTitle = extractMeta(html, 'og:title') || ''
+      const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
+      displayName = nameMatch ? nameMatch[1].trim() : null
+    }
+
+    return { follower_count: followerCount, display_name: displayName }
+  } catch {
+    return EMPTY
+  }
 }
 
 async function fetchYouTube(username: string): Promise<SocialStats> {
-  // Try @handle URL format
-  const url = `https://www.youtube.com/@${username}`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-  })
-  if (!res.ok) return { follower_count: null, display_name: null }
-  const html = await res.text()
+  try {
+    const url = `https://www.youtube.com/@${username}`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return EMPTY
+    const html = await res.text()
 
-  // YouTube includes subscriber count in the page content
-  // Look for "X subscribers" pattern in the HTML
-  const subMatch = html.match(/([\d,.]+[KkMmBb]?)\s+subscribers/i)
-  const followerCount = subMatch ? parseFollowerString(subMatch[1]) : null
+    // YouTube embeds subscriber count in the page HTML
+    const subMatch = html.match(/([\d,.]+[KkMmBb]?)\s+subscribers/i)
+    const followerCount = subMatch ? parseFollowerString(subMatch[1]) : null
 
-  const ogTitle = extractMeta(html, 'og:title')
-  const displayName = ogTitle
-    ? ogTitle.replace(/\s*[-–—]?\s*YouTube\s*$/, '').trim()
-    : null
+    const ogTitle = extractMeta(html, 'og:title')
+    const displayName = ogTitle
+      ? ogTitle.replace(/\s*[-–—]?\s*YouTube\s*$/, '').trim()
+      : null
 
-  return { follower_count: followerCount, display_name: displayName }
+    return { follower_count: followerCount, display_name: displayName }
+  } catch {
+    return EMPTY
+  }
 }
 
 async function fetchTwitter(username: string): Promise<SocialStats> {
-  // X/Twitter – try to fetch the profile page (nitter as a fallback idea)
-  // Twitter's main site requires JS, but may include some meta info
-  const url = `https://x.com/${username}`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-  })
-  if (!res.ok) return { follower_count: null, display_name: null }
-  const html = await res.text()
+  try {
+    const url = `https://x.com/${username}`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return EMPTY
+    const html = await res.text()
 
-  const ogDesc = extractMeta(html, 'og:description') || ''
-  // Common pattern: "X Followers" or includes follower count
-  const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
-  const followerCount = followerMatch
-    ? parseFollowerString(followerMatch[1])
-    : null
+    const ogDesc = extractMeta(html, 'og:description') || ''
+    const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+Followers/i)
+    const followerCount = followerMatch
+      ? parseFollowerString(followerMatch[1])
+      : null
 
-  const ogTitle = extractMeta(html, 'og:title') || ''
-  // e.g. "John Doe (@johndoe) / X"
-  const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
-  const displayName = nameMatch ? nameMatch[1].trim() : null
+    const ogTitle = extractMeta(html, 'og:title') || ''
+    const nameMatch = ogTitle.match(/^(.+?)\s*\(@/)
+    const displayName = nameMatch ? nameMatch[1].trim() : null
 
-  return { follower_count: followerCount, display_name: displayName }
+    return { follower_count: followerCount, display_name: displayName }
+  } catch {
+    return EMPTY
+  }
 }
 
 async function fetchLinkedIn(username: string): Promise<SocialStats> {
-  const url = `https://www.linkedin.com/in/${username}/`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'en-US,en;q=0.9' },
-    redirect: 'follow',
-  })
-  if (!res.ok) return { follower_count: null, display_name: null }
-  const html = await res.text()
+  try {
+    const url = `https://www.linkedin.com/in/${username}/`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return EMPTY
+    const html = await res.text()
 
-  const ogDesc = extractMeta(html, 'og:description') || ''
-  const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+followers/i)
-  const followerCount = followerMatch
-    ? parseFollowerString(followerMatch[1])
-    : null
+    const ogDesc = extractMeta(html, 'og:description') || ''
+    const followerMatch = ogDesc.match(/([\d,.]+[KkMmBb]?)\s+followers/i)
+    const followerCount = followerMatch
+      ? parseFollowerString(followerMatch[1])
+      : null
 
-  const ogTitle = extractMeta(html, 'og:title') || ''
-  // e.g. "John Doe - Senior Dev | LinkedIn"
-  const displayName = ogTitle
-    ? ogTitle.split(/\s*[-–—|]\s*/)[0].trim()
-    : null
+    const ogTitle = extractMeta(html, 'og:title') || ''
+    const displayName = ogTitle
+      ? ogTitle.split(/\s*[-–—|]\s*/)[0].trim()
+      : null
 
-  return { follower_count: followerCount, display_name: displayName }
+    return { follower_count: followerCount, display_name: displayName }
+  } catch {
+    return EMPTY
+  }
 }
 
 async function fetchGenericProfile(
@@ -184,7 +261,7 @@ async function fetchGenericProfile(
       },
       redirect: 'follow',
     })
-    if (!res.ok) return { follower_count: null, display_name: null }
+    if (!res.ok) return EMPTY
     const html = await res.text()
 
     const ogDesc = extractMeta(html, 'og:description') || ''
@@ -196,7 +273,7 @@ async function fetchGenericProfile(
     const ogTitle = extractMeta(html, 'og:title')
     return { follower_count: followerCount, display_name: ogTitle }
   } catch {
-    return { follower_count: null, display_name: null }
+    return EMPTY
   }
 }
 
@@ -239,7 +316,7 @@ serve(async (req) => {
       )
     }
 
-    let stats: SocialStats = { follower_count: null, display_name: null }
+    let stats: SocialStats = EMPTY
 
     switch (platform) {
       case 'Instagram':

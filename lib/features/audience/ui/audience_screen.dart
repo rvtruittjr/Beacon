@@ -43,25 +43,7 @@ class _AudienceScreenState extends ConsumerState<AudienceScreen> {
       data: (audience) {
         if (!_initialised && audience != null) {
           Future.microtask(() {
-            final n = ref.read(audienceEditorProvider.notifier);
-            n.setPersonaName(audience.personaName ?? '');
-            n.setPersonaSummary(audience.personaSummary ?? '');
-            n.setAgeRangeMin(audience.ageRangeMin);
-            n.setAgeRangeMax(audience.ageRangeMax);
-            n.setGenderSkew(audience.genderSkew);
-            // Seed lists by adding each item
-            for (final loc in audience.locations) {
-              n.addLocation(loc);
-            }
-            for (final i in audience.interests) {
-              n.addInterest(i);
-            }
-            for (final p in audience.painPoints) {
-              n.addPainPoint(p);
-            }
-            for (final g in audience.goals) {
-              n.addGoal(g);
-            }
+            ref.read(audienceEditorProvider.notifier).seed(audience);
           });
           _initialised = true;
         }
