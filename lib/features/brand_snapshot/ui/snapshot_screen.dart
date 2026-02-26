@@ -19,6 +19,8 @@ import 'widgets/brand_voice_section.dart';
 import 'widgets/audience_section.dart';
 import 'widgets/content_pillars_section.dart';
 import 'widgets/top_content_section.dart';
+import 'widgets/brand_health_card.dart';
+import '../models/brand_health_score.dart';
 
 class SnapshotScreen extends ConsumerWidget {
   const SnapshotScreen({super.key});
@@ -41,8 +43,11 @@ class SnapshotScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(snapshotProvider),
       ),
       data: (data) {
+        final healthScore = BrandHealthScore.fromSnapshotData(data);
+
         final sections = <Widget>[
           SnapshotHeader(brand: data.brand),
+          BrandHealthCard(score: healthScore),
           ColorPaletteSection(colors: data.colors),
           TypographySection(fonts: data.fonts),
           LogoVariationsSection(logos: data.logos),

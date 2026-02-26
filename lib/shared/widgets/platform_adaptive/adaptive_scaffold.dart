@@ -21,6 +21,7 @@ const _allNavItems = [
   _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
   _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
   _NavItem('Audience', LucideIcons.users, '/app/audience'),
+  _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
   _NavItem('Archive', LucideIcons.archive, '/app/archive'),
   _NavItem('Sharing', LucideIcons.share2, '/app/sharing'),
   _NavItem('Settings', LucideIcons.settings, '/app/settings'),

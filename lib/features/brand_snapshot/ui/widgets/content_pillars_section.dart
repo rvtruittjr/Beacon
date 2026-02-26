@@ -75,7 +75,7 @@ class ContentPillarsSection extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         TextButton(
-          onPressed: () => context.go('/app/voice'),
+          onPressed: () => context.go('/app/content-pillars'),
           child: Text(
             'Add',
             style: AppFonts.inter(fontSize: 14, color: mutedColor),

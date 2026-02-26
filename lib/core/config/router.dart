@@ -15,6 +15,7 @@ import '../../features/brand_kit/ui/brand_kit_screen.dart';
 import '../../features/brand_snapshot/ui/snapshot_screen.dart';
 import '../../features/voice_tone/ui/voice_screen.dart';
 import '../../features/audience/ui/audience_screen.dart';
+import '../../features/content_pillars/ui/content_pillars_screen.dart';
 import '../../features/content_archive/ui/archive_screen.dart';
 import '../../features/sharing/ui/share_settings_screen.dart';
 import '../../features/sharing/ui/password_gate_screen.dart';
@@ -106,6 +107,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/app/audience',
             pageBuilder: (context, state) =>
                 _fadeSlide(state, const AudienceScreen()),
+          ),
+          GoRoute(
+            path: '/app/content-pillars',
+            pageBuilder: (context, state) =>
+                _fadeSlide(state, const ContentPillarsScreen()),
           ),
           GoRoute(
             path: '/app/archive',
