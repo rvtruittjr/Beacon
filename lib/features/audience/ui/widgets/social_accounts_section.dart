@@ -10,6 +10,7 @@ import '../../../../core/providers/app_providers.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/platform_adaptive/adaptive_dialog.dart';
+import '../../data/social_account_repository.dart';
 import '../../models/social_account_model.dart';
 import '../../providers/audience_provider.dart';
 
@@ -89,6 +90,8 @@ class SocialAccountsSection extends ConsumerWidget {
                         .deleteAccount(account.id!);
                     ref.invalidate(socialAccountsProvider);
                   },
+                  onStatsUpdated: () =>
+                      ref.invalidate(socialAccountsProvider),
                 );
               }).toList(),
             );
@@ -110,28 +113,59 @@ class SocialAccountsSection extends ConsumerWidget {
         onSave: (platform, username, displayName, followerCount) async {
           final brandId = ref.read(currentBrandProvider);
           if (brandId == null) return;
+          final repo = ref.read(socialAccountRepositoryProvider);
 
           if (existing != null) {
-            await ref.read(socialAccountRepositoryProvider).updateAccount(
-                  existing.id!,
-                  platform: platform,
-                  username: username,
-                  displayName: displayName,
-                  followerCount: followerCount,
-                );
+            await repo.updateAccount(
+              existing.id!,
+              platform: platform,
+              username: username,
+              displayName: displayName,
+              followerCount: followerCount,
+            );
           } else {
-            await ref.read(socialAccountRepositoryProvider).addAccount(
-                  brandId: brandId,
-                  platform: platform,
-                  username: username,
-                  displayName: displayName,
-                  followerCount: followerCount,
-                );
+            final saved = await repo.addAccount(
+              brandId: brandId,
+              platform: platform,
+              username: username,
+              displayName: displayName,
+              followerCount: followerCount,
+            );
+            // If follower count wasn't filled, fetch in background and update.
+            if (followerCount == null && saved.id != null) {
+              _backfillStats(repo, saved.id!, platform, username);
+            }
           }
           ref.invalidate(socialAccountsProvider);
         },
       ),
     );
+  }
+
+  /// Fetch stats in background and update the account row.
+  static Future<void> _backfillStats(
+    SocialAccountRepository repo,
+    String accountId,
+    String platform,
+    String username,
+  ) async {
+    try {
+      final response = await SupabaseService.client.functions.invoke(
+        'fetch-social-stats',
+        body: {'platform': platform, 'username': username},
+      );
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) return;
+      final fc = data['follower_count'];
+      final dn = data['display_name'] as String?;
+      if (fc != null || (dn != null && dn.isNotEmpty)) {
+        await repo.updateAccount(
+          accountId,
+          followerCount: fc is num ? fc.toInt() : null,
+          displayName: dn,
+        );
+      }
+    } catch (_) {}
   }
 }
 
@@ -142,11 +176,13 @@ class _AccountRow extends StatefulWidget {
     required this.account,
     required this.onEdit,
     required this.onDelete,
+    required this.onStatsUpdated,
   });
 
   final SocialAccountModel account;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onStatsUpdated;
 
   @override
   State<_AccountRow> createState() => _AccountRowState();
@@ -154,6 +190,41 @@ class _AccountRow extends StatefulWidget {
 
 class _AccountRowState extends State<_AccountRow> {
   bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoFetchIfNeeded();
+  }
+
+  Future<void> _autoFetchIfNeeded() async {
+    final account = widget.account;
+    // Skip if we already have follower data or no ID.
+    if (account.followerCount != null || account.id == null) return;
+    try {
+      final response = await SupabaseService.client.functions.invoke(
+        'fetch-social-stats',
+        body: {
+          'platform': account.platform,
+          'username': account.username,
+        },
+      );
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) return;
+      final fc = data['follower_count'];
+      final dn = data['display_name'] as String?;
+      if (fc == null && (dn == null || dn.isEmpty)) return;
+
+      await SocialAccountRepository().updateAccount(
+        account.id!,
+        followerCount: fc is num ? fc.toInt() : null,
+        displayName: (dn != null && dn.isNotEmpty && account.displayName == null)
+            ? dn
+            : null,
+      );
+      if (mounted) widget.onStatsUpdated();
+    } catch (_) {}
+  }
 
   IconData _platformIcon(String platform) {
     return switch (platform) {
