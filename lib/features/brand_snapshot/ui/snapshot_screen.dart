@@ -46,59 +46,192 @@ class SnapshotScreen extends ConsumerWidget {
       ),
       data: (data) {
         final healthScore = BrandHealthScore.fromSnapshotData(data);
+        final isWide = MediaQuery.sizeOf(context).width > 900;
 
-        final sections = <Widget>[
-          SnapshotHeader(
-            brand: data.brand,
-            onExportPdf: () => _exportPdf(context, data),
-          ),
-          BrandHealthCard(score: healthScore),
-          ColorPaletteSection(colors: data.colors),
-          TypographySection(fonts: data.fonts),
-          LogoVariationsSection(logos: data.logos),
-          BrandVoiceSection(voice: data.voice),
-          AudienceSection(audience: data.audience),
-          ContentPillarsSection(pillars: data.pillars),
-          TopContentSection(items: data.topContent),
-        ];
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.xl,
-            AppSpacing.lg,
-            AppSpacing.x2l,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (int i = 0; i < sections.length; i++) ...[
-                    sections[i]
-                        .animate()
-                        .fadeIn(
-                          delay: (80 * i).ms,
-                          duration: 350.ms,
-                          curve: Curves.easeOut,
-                        )
-                        .moveY(
-                          begin: 12,
-                          end: 0,
-                          delay: (80 * i).ms,
-                          duration: 350.ms,
-                          curve: Curves.easeOut,
-                        ),
-                    if (i < sections.length - 1)
-                      const SizedBox(height: AppSpacing.lg),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        );
+        if (!isWide) {
+          return _buildMobileLayout(context, data, healthScore);
+        }
+        return _buildDesktopLayout(context, data, healthScore);
       },
+    );
+  }
+
+  Widget _buildMobileLayout(
+    BuildContext context,
+    SnapshotData data,
+    BrandHealthScore healthScore,
+  ) {
+    final sections = <Widget>[
+      SnapshotHeader(
+        brand: data.brand,
+        onExportPdf: () => _exportPdf(context, data),
+      ),
+      BrandHealthCard(score: healthScore),
+      ColorPaletteSection(colors: data.colors),
+      TypographySection(fonts: data.fonts),
+      LogoVariationsSection(logos: data.logos),
+      BrandVoiceSection(voice: data.voice),
+      AudienceSection(audience: data.audience),
+      ContentPillarsSection(pillars: data.pillars),
+      TopContentSection(items: data.topContent),
+    ];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.x2l,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (int i = 0; i < sections.length; i++) ...[
+                sections[i]
+                    .animate()
+                    .fadeIn(
+                      delay: (80 * i).ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOut,
+                    )
+                    .moveY(
+                      begin: 12,
+                      end: 0,
+                      delay: (80 * i).ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOut,
+                    ),
+                if (i < sections.length - 1)
+                  const SizedBox(height: AppSpacing.lg),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    BuildContext context,
+    SnapshotData data,
+    BrandHealthScore healthScore,
+  ) {
+    Widget animateRow(Widget child, int index) {
+      return child
+          .animate()
+          .fadeIn(
+            delay: (100 * index).ms,
+            duration: 350.ms,
+            curve: Curves.easeOut,
+          )
+          .moveY(
+            begin: 12,
+            end: 0,
+            delay: (100 * index).ms,
+            duration: 350.ms,
+            curve: Curves.easeOut,
+          );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.x2l,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Row 0: Header (full width)
+              animateRow(
+                SnapshotHeader(
+                  brand: data.brand,
+                  onExportPdf: () => _exportPdf(context, data),
+                ),
+                0,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 1: Health + Colors (1/2 + 1/2)
+              animateRow(
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: BrandHealthCard(score: healthScore)),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: ColorPaletteSection(colors: data.colors)),
+                    ],
+                  ),
+                ),
+                1,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 2: Typography + Logos (1/2 + 1/2)
+              animateRow(
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: TypographySection(fonts: data.fonts)),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: LogoVariationsSection(logos: data.logos)),
+                    ],
+                  ),
+                ),
+                2,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 3: Voice + Audience (1/2 + 1/2)
+              animateRow(
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: BrandVoiceSection(voice: data.voice)),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                          child: AudienceSection(audience: data.audience)),
+                    ],
+                  ),
+                ),
+                3,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 4: Pillars (1/3) + Top Content (2/3)
+              animateRow(
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: ContentPillarsSection(pillars: data.pillars),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        flex: 2,
+                        child: TopContentSection(items: data.topContent),
+                      ),
+                    ],
+                  ),
+                ),
+                4,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

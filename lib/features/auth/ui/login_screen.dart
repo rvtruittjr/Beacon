@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
@@ -76,16 +77,135 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final bgColor =
+        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final isWide = MediaQuery.sizeOf(context).width > 900;
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: _buildForm(context),
+      body: isWide
+          ? Row(
+              children: [
+                Expanded(child: _buildSplashPanel()),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: _buildForm(context),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: _buildForm(context),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildSplashPanel() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.sidebarBg, AppColors.sidebarSurface],
         ),
       ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.x2l,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.blockLime,
+                      borderRadius: BorderRadius.all(AppRadius.lg),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'B',
+                        style: AppFonts.clashDisplay(
+                          fontSize: 28,
+                          color: AppColors.textOnLime,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    'Beacøn',
+                    style: AppFonts.clashDisplay(
+                      fontSize: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.x2l),
+              // Tagline
+              Text(
+                'Your brand identity,\nall in one place.',
+                style: AppFonts.clashDisplay(
+                  fontSize: 32,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.x2l),
+              // Feature bullets
+              const _SplashFeature(
+                icon: LucideIcons.palette,
+                text: 'Build your visual identity',
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const _SplashFeature(
+                icon: LucideIcons.mic2,
+                text: 'Define your brand voice',
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const _SplashFeature(
+                icon: LucideIcons.fileText,
+                text: 'Export brand guidelines',
+              ),
+              const SizedBox(height: AppSpacing.x2l),
+              // Decorative dots
+              Row(
+                children: [
+                  _dot(AppColors.blockLime),
+                  const SizedBox(width: AppSpacing.sm),
+                  _dot(AppColors.blockViolet),
+                  const SizedBox(width: AppSpacing.sm),
+                  _dot(AppColors.blockCoral),
+                  const SizedBox(width: AppSpacing.sm),
+                  _dot(AppColors.blockYellow),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
@@ -242,5 +362,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     return formContent;
+  }
+}
+
+class _SplashFeature extends StatelessWidget {
+  const _SplashFeature({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.blockLime.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
+          child: Icon(icon, size: 20, color: AppColors.blockLime),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Text(
+          text,
+          style: AppFonts.inter(fontSize: 16, color: Colors.white),
+        ),
+      ],
+    );
   }
 }
