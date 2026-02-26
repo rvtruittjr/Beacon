@@ -326,7 +326,10 @@ class _MobileLayout extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      body: child,
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: child,
+      ),
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(
