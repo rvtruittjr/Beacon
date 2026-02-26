@@ -30,7 +30,7 @@ class AudienceScreen extends ConsumerStatefulWidget {
 }
 
 class _AudienceScreenState extends ConsumerState<AudienceScreen> {
-  bool _initialised = false;
+  String? _seededId;
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +42,12 @@ class _AudienceScreenState extends ConsumerState<AudienceScreen> {
       error: (_, __) =>
           const Center(child: Text('Failed to load audience data')),
       data: (audience) {
-        if (!_initialised && audience != null) {
+        // Seed the editor whenever fresh data arrives from DB.
+        if (audience != null && _seededId != audience.id) {
           Future.microtask(() {
             ref.read(audienceEditorProvider.notifier).seed(audience);
           });
-          _initialised = true;
+          _seededId = audience.id;
         }
 
         return _AudienceScreenBody(initial: audience);
@@ -115,8 +116,6 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
     setState(() => _saving = false);
 
     if (error == null) {
-      // Refresh the persisted data provider so next load is correct.
-      ref.invalidate(audienceProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Audience saved'),

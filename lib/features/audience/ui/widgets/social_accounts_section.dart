@@ -535,6 +535,11 @@ class _AccountDialogState extends State<_AccountDialog> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
+      // If no follower count yet, try a quick fetch before saving.
+      if (_followerController.text.trim().isEmpty && !_fetching) {
+        await _fetchStats();
+      }
+
       await widget.onSave(
         _selectedPlatform,
         _usernameController.text.trim(),
