@@ -22,30 +22,33 @@ class LogoVariationsSection extends StatelessWidget {
       headerTitle: 'Logos',
       child: logos.isEmpty
           ? _buildEmpty(context, mutedColor)
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: logos.length,
-                  itemBuilder: (context, index) {
-                    final logo = logos[index];
-                    return _LogoCard(
-                      name: logo['name'] as String? ?? 'Logo',
-                      url: logo['file_url'] as String? ?? '',
-                      mutedColor: mutedColor,
-                    );
-                  },
-                );
-              },
-            ),
+          : _buildGrid(context, mutedColor),
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, Color mutedColor) {
+    // Use MediaQuery instead of LayoutBuilder to avoid IntrinsicHeight conflict
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final crossAxisCount = screenWidth > 1200 ? 4 : 2;
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+        childAspectRatio: 1.0,
+      ),
+      itemCount: logos.length,
+      itemBuilder: (context, index) {
+        final logo = logos[index];
+        return _LogoCard(
+          name: logo['name'] as String? ?? 'Logo',
+          url: logo['file_url'] as String? ?? '',
+          mutedColor: mutedColor,
+        );
+      },
     );
   }
 

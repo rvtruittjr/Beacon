@@ -26,89 +26,95 @@ class BrandVoiceSection extends StatelessWidget {
       headerTitle: 'Voice & Tone',
       child: voice == null
           ? _buildEmpty(context, mutedColor)
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 500;
-                final archetype = voice!['archetype'] as String?;
-                final mission = voice!['mission_statement'] as String?;
-                final formal = (voice!['tone_formal'] as num?)?.toInt() ?? 5;
-                final serious = (voice!['tone_serious'] as num?)?.toInt() ?? 5;
-                final bold = (voice!['tone_bold'] as num?)?.toInt() ?? 5;
+          : _buildContent(context, textColor, mutedColor),
+    );
+  }
 
-                final leftColumn = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (archetype != null && archetype.isNotEmpty)
-                      Text(
-                        archetype,
-                        style: AppFonts.clashDisplay(
-                          fontSize: 24,
-                          color: textColor,
-                        ),
-                      ),
-                    if (mission != null && mission.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Container(
-                        padding:
-                            const EdgeInsets.only(left: AppSpacing.md),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: AppColors.blockLime,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          mission,
-                          style: AppFonts.inter(
-                            fontSize: 14,
-                            color: mutedColor,
-                          ).copyWith(fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                    ],
-                    if (archetype == null && mission == null)
-                      Text(
-                        'Set your voice archetype and mission statement.',
-                        style: AppFonts.inter(
-                          fontSize: 14,
-                          color: mutedColor,
-                        ).copyWith(fontStyle: FontStyle.italic),
-                      ),
-                  ],
-                );
+  Widget _buildContent(
+    BuildContext context,
+    Color textColor,
+    Color mutedColor,
+  ) {
+    final archetype = voice!['archetype'] as String?;
+    final mission = voice!['mission_statement'] as String?;
+    final formal = (voice!['tone_formal'] as num?)?.toInt() ?? 5;
+    final serious = (voice!['tone_serious'] as num?)?.toInt() ?? 5;
+    final bold = (voice!['tone_bold'] as num?)?.toInt() ?? 5;
 
-                final chart = SizedBox(
-                  height: 200,
-                  child: _ToneRadarChart(
-                    formal: formal,
-                    serious: serious,
-                    bold: bold,
-                  ),
-                );
-
-                if (isWide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: leftColumn),
-                      const SizedBox(width: AppSpacing.lg),
-                      SizedBox(width: 220, child: chart),
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    leftColumn,
-                    const SizedBox(height: AppSpacing.lg),
-                    chart,
-                  ],
-                );
-              },
+    final leftColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (archetype != null && archetype.isNotEmpty)
+          Text(
+            archetype,
+            style: AppFonts.clashDisplay(
+              fontSize: 24,
+              color: textColor,
             ),
+          ),
+        if (mission != null && mission.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.only(left: AppSpacing.md),
+            decoration: const BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: AppColors.blockLime,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Text(
+              mission,
+              style: AppFonts.inter(
+                fontSize: 14,
+                color: mutedColor,
+              ).copyWith(fontStyle: FontStyle.italic),
+            ),
+          ),
+        ],
+        if (archetype == null && mission == null)
+          Text(
+            'Set your voice archetype and mission statement.',
+            style: AppFonts.inter(
+              fontSize: 14,
+              color: mutedColor,
+            ).copyWith(fontStyle: FontStyle.italic),
+          ),
+      ],
+    );
+
+    final chart = SizedBox(
+      height: 200,
+      child: _ToneRadarChart(
+        formal: formal,
+        serious: serious,
+        bold: bold,
+      ),
+    );
+
+    // Use MediaQuery instead of LayoutBuilder to avoid IntrinsicHeight conflict
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isWide = screenWidth > 1100;
+
+    if (isWide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: leftColumn),
+          const SizedBox(width: AppSpacing.lg),
+          SizedBox(width: 220, child: chart),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        leftColumn,
+        const SizedBox(height: AppSpacing.lg),
+        chart,
+      ],
     );
   }
 
