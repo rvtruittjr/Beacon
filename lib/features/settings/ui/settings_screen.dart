@@ -13,6 +13,7 @@ import '../../../core/services/supabase_service.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -46,6 +47,8 @@ class SettingsScreen extends ConsumerWidget {
               const _AppearanceSection(),
               const SizedBox(height: AppSpacing.lg),
               const _SubscriptionSection(),
+              const SizedBox(height: AppSpacing.lg),
+              const _LogOutSection(),
               const SizedBox(height: AppSpacing.lg),
               const _DangerZoneSection(),
             ],
@@ -453,6 +456,40 @@ class _SubscriptionSection extends ConsumerWidget {
     } catch (_) {
       return isoDate;
     }
+  }
+}
+
+// ── Log Out Section ─────────────────────────────────────────────
+
+class _LogOutSection extends ConsumerStatefulWidget {
+  const _LogOutSection();
+
+  @override
+  ConsumerState<_LogOutSection> createState() => _LogOutSectionState();
+}
+
+class _LogOutSectionState extends ConsumerState<_LogOutSection> {
+  bool _loggingOut = false;
+
+  Future<void> _logOut() async {
+    setState(() => _loggingOut = true);
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+    } catch (_) {
+      if (mounted) setState(() => _loggingOut = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppButton(
+      label: _loggingOut ? 'Logging out…' : 'Log out',
+      variant: AppButtonVariant.secondary,
+      icon: _loggingOut ? null : LucideIcons.logOut,
+      isLoading: _loggingOut,
+      isFullWidth: true,
+      onPressed: _loggingOut ? null : _logOut,
+    );
   }
 }
 
