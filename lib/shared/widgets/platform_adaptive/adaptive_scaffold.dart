@@ -59,81 +59,110 @@ class _DesktopLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+
     return Scaffold(
-      backgroundColor: AppColors.sidebarBg,
-      body: Row(
-        children: [
-          // ── Sidebar (always dark, flat right edge like reference)
-          Container(
-            width: 250,
-            color: AppColors.sidebarBg,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSpacing.x2l),
-
-                // Logo — yellow like "Moo" in reference
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  child: Text(
-                    'Beacøn',
-                    style: AppFonts.clashDisplay(
-                      fontSize: 24,
-                      color: AppColors.blockYellow,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Brand switcher
-                const BrandSwitcher(),
-
-                const SizedBox(height: AppSpacing.x2l),
-
-                // Nav items
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
-                    child: Column(
-                      children: _allNavItems
-                          .map((item) => _SidebarNavItem(item: item))
-                          .toList(),
-                    ),
-                  ),
-                ),
-
-                // User profile card at bottom
-                const _SidebarUserCard(),
-
-                const SizedBox(height: AppSpacing.md),
-              ],
-            ),
-          ),
-
-          // ── Content area — floating panel with rounded corners
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(
-                top: AppSpacing.md,
-                right: AppSpacing.md,
-                bottom: AppSpacing.md,
-              ),
+      backgroundColor: bgColor,
+      body: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            // ── Sidebar — dark rounded floating panel
+            Container(
+              width: 240,
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.backgroundDark
-                    : AppColors.backgroundLight,
+                color: AppColors.sidebarBg,
                 borderRadius: BorderRadius.all(AppRadius.x2l),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: child,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // Logo
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.blockLime,
+                            borderRadius: BorderRadius.all(AppRadius.sm),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'B',
+                              style: TextStyle(
+                                fontFamily: 'ClashDisplay',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textOnLime,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          'Beacøn',
+                          style: AppFonts.clashDisplay(
+                            fontSize: 22,
+                            color: AppColors.sidebarText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Brand switcher
+                  const BrandSwitcher(),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Nav items
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      child: Column(
+                        children: _allNavItems
+                            .map((item) => _SidebarNavItem(item: item))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+
+                  // User profile card at bottom
+                  const _SidebarUserCard(),
+
+                  const SizedBox(height: AppSpacing.md),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            const SizedBox(width: AppSpacing.md),
+
+            // ── Content area — white rounded panel
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.backgroundDark : AppColors.surfaceLight,
+                  borderRadius: BorderRadius.all(AppRadius.x2l),
+                  boxShadow: isDark ? [] : AppShadows.card,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: child,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -157,54 +186,50 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isActive = currentPath == widget.item.path;
 
-    // Reference style: active = white icon + white text, no bg fill
-    // Hover = slightly lighter text
-    // Default = muted gray
-    final Color iconColor;
-    final Color textColor;
-
-    if (isActive) {
-      iconColor = AppColors.sidebarText;
-      textColor = AppColors.sidebarText;
-    } else if (_isHovered) {
-      iconColor = AppColors.sidebarText.withValues(alpha: 0.8);
-      textColor = AppColors.sidebarText.withValues(alpha: 0.8);
-    } else {
-      iconColor = AppColors.sidebarMuted;
-      textColor = AppColors.sidebarMuted;
-    }
-
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: () => context.go(widget.item.path),
-        child: Container(
-          height: 46,
-          margin: const EdgeInsets.only(bottom: 2),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          color: Colors.transparent,
+        child: AnimatedContainer(
+          duration: AppDurations.fast,
+          height: 44,
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.blockLime
+                : _isHovered
+                    ? AppColors.sidebarSurface
+                    : Colors.transparent,
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
           child: Row(
             children: [
-              Icon(widget.item.icon, size: 20, color: iconColor),
+              Icon(
+                widget.item.icon,
+                size: 20,
+                color: isActive
+                    ? AppColors.textOnLime
+                    : _isHovered
+                        ? AppColors.sidebarText
+                        : AppColors.sidebarMuted,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   widget.item.label,
                   style: AppFonts.inter(
-                    fontSize: 15,
-                    fontWeight:
-                        isActive ? FontWeight.w600 : FontWeight.w400,
-                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    color: isActive
+                        ? AppColors.textOnLime
+                        : _isHovered
+                            ? AppColors.sidebarText
+                            : AppColors.sidebarMuted,
                   ),
                 ),
               ),
-              if (isActive)
-                Icon(
-                  LucideIcons.chevronUp,
-                  size: 16,
-                  color: AppColors.sidebarText,
-                ),
             ],
           ),
         ),
@@ -232,82 +257,53 @@ class _SidebarUserCard extends ConsumerWidget {
         '';
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.sidebarSurface,
-        borderRadius: BorderRadius.all(AppRadius.xl),
+        borderRadius: BorderRadius.all(AppRadius.lg),
       ),
-      child: Column(
+      child: Row(
         children: [
-          // Avatar — large circle like reference
           CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.blockYellow,
+            radius: 18,
+            backgroundColor: AppColors.blockLime,
             child: Text(
               displayName.isNotEmpty
                   ? displayName[0].toUpperCase()
                   : '?',
               style: const TextStyle(
-                color: AppColors.textOnYellow,
+                color: AppColors.textOnLime,
                 fontWeight: FontWeight.w700,
-                fontSize: 22,
+                fontSize: 14,
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Name
-          Text(
-            displayName.isNotEmpty ? displayName : 'Welcome',
-            style: AppFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.sidebarText,
-            ),
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-
-          // Subtitle / email
-          if (email.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              email,
-              style: AppFonts.inter(
-                fontSize: 12,
-                color: AppColors.sidebarMuted,
-              ),
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
-
-          const SizedBox(height: AppSpacing.md),
-
-          // Upgrade button — yellow pill like reference
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {
-                // TODO: upgrade flow
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.blockYellow,
-                foregroundColor: AppColors.textOnYellow,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(AppRadius.full),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  displayName.isNotEmpty ? displayName : 'Welcome',
+                  style: AppFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.sidebarText,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Text(
-                'Upgrade',
-                style: AppFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textOnYellow,
-                ),
-              ),
+                if (email.isNotEmpty)
+                  Text(
+                    email,
+                    style: AppFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.sidebarMuted,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
           ),
         ],
@@ -333,9 +329,11 @@ class _MobileLayout extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.sidebarBg,
-          boxShadow: AppShadows.lg,
+          borderRadius: const BorderRadius.vertical(
+            top: AppRadius.xl,
+          ),
         ),
         child: SafeArea(
           child: Padding(
@@ -361,7 +359,7 @@ class _MobileLayout extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? AppColors.sidebarSurface
+                          ? AppColors.blockLime
                           : Colors.transparent,
                       borderRadius: BorderRadius.all(AppRadius.md),
                     ),
@@ -372,7 +370,7 @@ class _MobileLayout extends StatelessWidget {
                           item.icon,
                           size: 22,
                           color: isActive
-                              ? AppColors.sidebarText
+                              ? AppColors.textOnLime
                               : AppColors.sidebarMuted,
                         ),
                         const SizedBox(height: 2),
@@ -384,7 +382,7 @@ class _MobileLayout extends StatelessWidget {
                                 ? FontWeight.w600
                                 : FontWeight.w400,
                             color: isActive
-                                ? AppColors.sidebarText
+                                ? AppColors.textOnLime
                                 : AppColors.sidebarMuted,
                           ),
                         ),

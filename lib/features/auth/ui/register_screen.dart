@@ -104,80 +104,79 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 768;
-
-          if (isDesktop) {
-            return Row(
-              children: [
-                Expanded(child: _buildLeftPanel()),
-                Expanded(child: Center(child: _buildForm(context))),
-              ],
-            );
-          }
-
-          return Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: _buildForm(context),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildLeftPanel() {
-    return Container(
-      color: AppColors.backgroundDark,
-      padding: const EdgeInsets.all(AppSpacing.x2l),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Beacøn',
-            style: AppFonts.clashDisplay(
-              fontSize: 48,
-              color: AppColors.textPrimaryDark,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Your brand, always lit.',
-            style: AppFonts.caveat(
-              fontSize: 32,
-              color: AppColors.mutedDark,
-            ),
-          ),
-        ],
+      backgroundColor: bgColor,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: _buildForm(context),
+        ),
       ),
     );
   }
 
   Widget _buildForm(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
     final formContent = Container(
-      constraints: const BoxConstraints(maxWidth: 400),
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      constraints: const BoxConstraints(maxWidth: 420),
+      padding: const EdgeInsets.all(AppSpacing.x2l),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        borderRadius: BorderRadius.all(AppRadius.x2l),
+        boxShadow: isDark ? [] : AppShadows.lg,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Logo
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.blockLime,
+                  borderRadius: BorderRadius.all(AppRadius.md),
+                ),
+                child: const Center(
+                  child: Text(
+                    'B',
+                    style: TextStyle(
+                      fontFamily: 'ClashDisplay',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textOnLime,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Beacøn',
+                style: AppFonts.clashDisplay(fontSize: 26, color: textColor),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.x2l),
           Text(
             'Create your account',
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppFonts.clashDisplay(fontSize: 28, color: textColor),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Start managing your brand identity',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.outline,
-            ),
+            style: AppFonts.inter(fontSize: 14, color: mutedColor),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xl),
           AuthTextField(
@@ -234,9 +233,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           if (_error != null) ...[
             Text(
               _error!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppFonts.inter(fontSize: 13, color: AppColors.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -271,7 +268,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               Text(
                 'Already have an account? ',
-                style: theme.textTheme.bodySmall,
+                style: AppFonts.inter(fontSize: 13, color: mutedColor),
               ),
               TextButton(
                 onPressed: () => context.go('/login'),
@@ -297,7 +294,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       listenable: _passwordController,
       builder: (context, _) {
         final strength = _passwordStrength;
-        final colors = [AppColors.blockCoral, AppColors.blockYellow, AppColors.blockLime];
+        final colors = [AppColors.blockCoral, AppColors.blockYellow, AppColors.success];
 
         return Row(
           children: List.generate(3, (i) {

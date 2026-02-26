@@ -53,3 +53,4 @@ build/*/
 
 # Dart tool
 .dart_tool/
+build/*.dill*

@@ -14,63 +14,57 @@ class SnapshotHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
     return Container(
-      height: 160,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(
-        color: AppColors.blockYellow,
-        borderRadius: BorderRadius.all(AppRadius.lg),
+      decoration: BoxDecoration(
+        color: AppColors.sidebarBg,
+        borderRadius: BorderRadius.all(AppRadius.xl),
       ),
-      child: Stack(
+      child: Row(
         children: [
-          // Brand info — bottom left
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                brand.name,
-                style: AppFonts.clashDisplay(
-                  fontSize: 48,
-                  color: AppColors.textOnYellow,
-                ),
-              ),
-              if (brand.description != null &&
-                  brand.description!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    brand.description!,
-                    style: AppFonts.inter(
-                      fontSize: 16,
-                      color: AppColors.textOnYellow.withValues(alpha: 0.7),
-                    ),
+          // Brand info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  brand.name,
+                  style: AppFonts.clashDisplay(
+                    fontSize: 36,
+                    color: AppColors.sidebarText,
                   ),
                 ),
-            ],
-          ),
-          // Top right — Share button + timestamp
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                AppButton(
-                  label: 'Share',
-                  icon: LucideIcons.share2,
-                  onPressed: () => context.go('/app/sharing'),
-                ),
+                if (brand.description != null &&
+                    brand.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      brand.description!,
+                      style: AppFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.sidebarMuted,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Last updated ${brand.createdAt.timeAgo()}',
                   style: AppFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textOnYellow.withValues(alpha: 0.5),
+                    color: AppColors.sidebarMuted,
                   ),
                 ),
               ],
             ),
+          ),
+          AppButton(
+            label: 'Share',
+            icon: LucideIcons.share2,
+            onPressed: () => context.go('/app/sharing'),
           ),
         ],
       ),

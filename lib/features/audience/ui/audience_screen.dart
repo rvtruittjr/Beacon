@@ -153,20 +153,12 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Lime header ──
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: AppColors.blockLime,
-                  borderRadius: BorderRadius.all(AppRadius.lg),
-                ),
-                child: Text(
-                  'Your Audience',
-                  style: AppFonts.clashDisplay(
-                    fontSize: 32,
-                    color: AppColors.textOnLime,
-                  ),
+              // ── Header ──
+              Text(
+                'Your Audience',
+                style: AppFonts.clashDisplay(
+                  fontSize: 32,
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: AppSpacing.x2l),
@@ -443,8 +435,8 @@ class _EmptyState extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.x2l),
           decoration: BoxDecoration(
-            color: AppColors.blockLime,
-            borderRadius: BorderRadius.all(AppRadius.lg),
+            color: AppColors.sidebarBg,
+            borderRadius: BorderRadius.all(AppRadius.xl),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -452,14 +444,14 @@ class _EmptyState extends StatelessWidget {
               const Icon(
                 LucideIcons.users,
                 size: 48,
-                color: AppColors.textOnLime,
+                color: AppColors.sidebarMuted,
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Who are you talking to?',
                 style: AppFonts.clashDisplay(
                   fontSize: 28,
-                  color: AppColors.textOnLime,
+                  color: AppColors.sidebarText,
                 ),
                 textAlign: TextAlign.center,
               ),

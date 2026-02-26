@@ -3,34 +3,34 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ── Dark mode base (inverted version of light, same hue family)
-  static const backgroundDark  = Color(0xFF1E1F2E);
-  static const surfaceDark     = Color(0xFF272838);
-  static const surfaceMidDark  = Color(0xFF303144);
-  static const borderDark      = Color(0xFF3A3B50);
-  static const mutedDark       = Color(0xFF7C7D96);
-  static const textPrimaryDark = Color(0xFFF0F0F8);
+  // ── Dark mode base
+  static const backgroundDark  = Color(0xFF121218);
+  static const surfaceDark     = Color(0xFF1C1C26);
+  static const surfaceMidDark  = Color(0xFF252530);
+  static const borderDark      = Color(0xFF2E2E3C);
+  static const mutedDark       = Color(0xFF6B6B80);
+  static const textPrimaryDark = Color(0xFFF2F2F8);
 
-  // ── Light mode base (cool lavender-gray from reference)
-  static const backgroundLight  = Color(0xFFECEDF7);
-  static const surfaceLight      = Color(0xFFFFFFFF);
-  static const surfaceMidLight   = Color(0xFFF3F3FA);
-  static const borderLight       = Color(0xFFDCDDE8);
-  static const mutedLight        = Color(0xFF8B8CA0);
-  static const textPrimaryLight  = Color(0xFF1E1F2E);
+  // ── Light mode base (soft lavender-gray)
+  static const backgroundLight  = Color(0xFFF0EEFA);
+  static const surfaceLight     = Color(0xFFFFFFFF);
+  static const surfaceMidLight  = Color(0xFFF5F4FB);
+  static const borderLight      = Color(0xFFE2E0EE);
+  static const mutedLight       = Color(0xFF8E8EA0);
+  static const textPrimaryLight = Color(0xFF1A1A2E);
 
-  // ── Sidebar (always dark, regardless of theme mode)
-  static const sidebarBg       = Color(0xFF2D2E44);
-  static const sidebarSurface  = Color(0xFF3B3C55);
-  static const sidebarBorder   = Color(0xFF454660);
-  static const sidebarMuted    = Color(0xFF9494B0);
+  // ── Sidebar (always dark, floats on background)
+  static const sidebarBg       = Color(0xFF1A1A2E);
+  static const sidebarSurface  = Color(0xFF252540);
+  static const sidebarBorder   = Color(0xFF2F2F4A);
+  static const sidebarMuted    = Color(0xFF7878A0);
   static const sidebarText     = Color(0xFFFFFFFF);
 
-  // ── Block colors (card headers / section panels ONLY)
-  static const blockViolet = Color(0xFF6C63FF); // Brand Kit
-  static const blockCoral  = Color(0xFFFF6B6B); // Content Archive
-  static const blockLime   = Color(0xFF4ADE80); // Voice & Audience
-  static const blockYellow = Color(0xFFFFD166); // Snapshot & Hero
+  // ── Accent colors
+  static const blockViolet = Color(0xFF6C63FF);
+  static const blockCoral  = Color(0xFFFF6B6B);
+  static const blockLime   = Color(0xFFC8F135);
+  static const blockYellow = Color(0xFFFFD166);
 
   // ── Functional
   static const focusRing = Color(0xFF6C63FF);
@@ -38,9 +38,9 @@ class AppColors {
   static const warning   = Color(0xFFF59E0B);
   static const error     = Color(0xFFEF4444);
 
-  // ── Text on block colors (always near-black or white based on luminance)
-  static const textOnLime   = Color(0xFF1A1A1A);
-  static const textOnYellow = Color(0xFF1A1A1A);
+  // ── Text on accent colors
+  static const textOnLime   = Color(0xFF1A1A2E);
+  static const textOnYellow = Color(0xFF1A1A2E);
   static const textOnViolet = Color(0xFFFFFFFF);
   static const textOnCoral  = Color(0xFFFFFFFF);
 }
@@ -79,7 +79,7 @@ class AppShadows {
 
   static const sm = [
     BoxShadow(
-      color: Color(0x0A000000),
+      color: Color(0x08000000),
       blurRadius: 4,
       offset: Offset(0, 1),
     ),
@@ -87,12 +87,12 @@ class AppShadows {
 
   static const md = [
     BoxShadow(
-      color: Color(0x0F000000),
-      blurRadius: 10,
+      color: Color(0x0C000000),
+      blurRadius: 16,
       offset: Offset(0, 4),
     ),
     BoxShadow(
-      color: Color(0x05000000),
+      color: Color(0x04000000),
       blurRadius: 4,
       offset: Offset(0, 1),
     ),
@@ -100,14 +100,22 @@ class AppShadows {
 
   static const lg = [
     BoxShadow(
-      color: Color(0x12000000),
-      blurRadius: 24,
+      color: Color(0x10000000),
+      blurRadius: 32,
       offset: Offset(0, 8),
     ),
     BoxShadow(
-      color: Color(0x08000000),
+      color: Color(0x06000000),
       blurRadius: 8,
       offset: Offset(0, 2),
+    ),
+  ];
+
+  static const card = [
+    BoxShadow(
+      color: Color(0x0A000000),
+      blurRadius: 20,
+      offset: Offset(0, 4),
     ),
   ];
 }

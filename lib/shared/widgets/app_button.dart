@@ -82,17 +82,17 @@ class _AppButtonState extends State<AppButton> {
           width: widget.isFullWidth ? double.infinity : null,
           child: Material(
             color: effectiveBg,
-            borderRadius: BorderRadius.all(AppRadius.md),
+            borderRadius: BorderRadius.all(AppRadius.full),
             child: InkWell(
               onTap: _isDisabled ? null : widget.onPressed,
-              borderRadius: BorderRadius.all(AppRadius.md),
+              borderRadius: BorderRadius.all(AppRadius.full),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 14,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(AppRadius.md),
+                  borderRadius: BorderRadius.all(AppRadius.full),
                   border: borderSide != null
                       ? Border.all(
                           color: borderSide.color,

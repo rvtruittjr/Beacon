@@ -16,10 +16,10 @@ class AppTheme {
       colorScheme: ColorScheme.dark(
         surface: AppColors.surfaceDark,
         onSurface: AppColors.textPrimaryDark,
-        primary: AppColors.blockViolet,
-        onPrimary: AppColors.textOnViolet,
-        secondary: AppColors.blockLime,
-        onSecondary: AppColors.textOnLime,
+        primary: AppColors.blockLime,
+        onPrimary: AppColors.textOnLime,
+        secondary: AppColors.blockViolet,
+        onSecondary: AppColors.textOnViolet,
         error: AppColors.error,
         onError: Colors.white,
         outline: AppColors.borderDark,
@@ -32,13 +32,10 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(AppRadius.lg),
-          side: BorderSide(
-            color: AppColors.borderDark.withValues(alpha: 0.5),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.all(AppRadius.xl),
         ),
         color: AppColors.surfaceDark,
+        surfaceTintColor: Colors.transparent,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -57,7 +54,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.focusRing, width: 2),
+          borderSide: const BorderSide(color: AppColors.blockLime, width: 2),
         ),
         hintStyle: const TextStyle(color: AppColors.mutedDark, fontSize: 14),
         labelStyle: const TextStyle(color: AppColors.mutedDark, fontSize: 14),
@@ -78,9 +75,13 @@ class AppTheme {
           foregroundColor: AppColors.textOnLime,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
+            borderRadius: BorderRadius.all(AppRadius.full),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -89,14 +90,15 @@ class AppTheme {
           backgroundColor: Colors.transparent,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
+            borderRadius: BorderRadius.all(AppRadius.full),
           ),
           side: const BorderSide(color: AppColors.borderDark, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.textPrimaryDark,
+          foregroundColor: AppColors.blockLime,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
@@ -119,18 +121,18 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(AppRadius.xl),
+          borderRadius: BorderRadius.all(AppRadius.x2l),
         ),
         backgroundColor: AppColors.surfaceDark,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: AppRadius.xl),
+          borderRadius: BorderRadius.vertical(top: AppRadius.x2l),
         ),
         backgroundColor: AppColors.surfaceDark,
       ),
       tabBarTheme: const TabBarThemeData(
-        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
       ),
     );
@@ -146,10 +148,10 @@ class AppTheme {
       colorScheme: ColorScheme.light(
         surface: AppColors.surfaceLight,
         onSurface: AppColors.textPrimaryLight,
-        primary: AppColors.blockViolet,
-        onPrimary: AppColors.textOnViolet,
-        secondary: AppColors.blockLime,
-        onSecondary: AppColors.textOnLime,
+        primary: AppColors.blockLime,
+        onPrimary: AppColors.textOnLime,
+        secondary: AppColors.blockViolet,
+        onSecondary: AppColors.textOnViolet,
         error: AppColors.error,
         onError: Colors.white,
         outline: AppColors.borderLight,
@@ -160,12 +162,11 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.xl),
         ),
         color: AppColors.surfaceLight,
-        shadowColor: Colors.black.withValues(alpha: 0.08),
         surfaceTintColor: Colors.transparent,
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -185,7 +186,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.focusRing, width: 2),
+          borderSide: const BorderSide(color: AppColors.blockLime, width: 2),
         ),
         hintStyle: const TextStyle(color: AppColors.mutedLight, fontSize: 14),
         labelStyle: const TextStyle(color: AppColors.mutedLight, fontSize: 14),
@@ -206,9 +207,13 @@ class AppTheme {
           foregroundColor: AppColors.textOnLime,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
+            borderRadius: BorderRadius.all(AppRadius.full),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -217,14 +222,15 @@ class AppTheme {
           backgroundColor: Colors.transparent,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
+            borderRadius: BorderRadius.all(AppRadius.full),
           ),
           side: const BorderSide(color: AppColors.borderLight, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.textPrimaryLight,
+          foregroundColor: AppColors.blockViolet,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
@@ -248,18 +254,18 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(AppRadius.xl),
+          borderRadius: BorderRadius.all(AppRadius.x2l),
         ),
         backgroundColor: AppColors.surfaceLight,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: AppRadius.xl),
+          borderRadius: BorderRadius.vertical(top: AppRadius.x2l),
         ),
         backgroundColor: AppColors.surfaceLight,
       ),
       tabBarTheme: const TabBarThemeData(
-        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
       ),
     );
