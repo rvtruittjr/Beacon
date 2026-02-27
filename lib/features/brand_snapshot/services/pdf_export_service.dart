@@ -10,17 +10,27 @@ class PdfExportService {
   static Future<Uint8List> generate(SnapshotData data) async {
     final doc = pw.Document();
 
-    // Pre-fetch logo images
+    // Pre-fetch logo images (skip SVGs — pdf package only supports raster)
     final logoImages = <pw.MemoryImage>[];
     for (final logo in data.logos) {
       final url = logo['file_url'] as String?;
-      if (url != null && url.isNotEmpty) {
-        try {
-          final response = await http.get(Uri.parse(url));
-          if (response.statusCode == 200) {
-            logoImages.add(pw.MemoryImage(response.bodyBytes));
+      if (url == null || url.isEmpty) continue;
+
+      // Skip SVG files — pw.MemoryImage only supports raster formats
+      final lowerUrl = url.toLowerCase();
+      if (lowerUrl.endsWith('.svg') || lowerUrl.contains('.svg?')) continue;
+
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+          // Verify it looks like a valid raster image (PNG/JPEG magic bytes)
+          final bytes = response.bodyBytes;
+          if (_isRasterImage(bytes)) {
+            logoImages.add(pw.MemoryImage(bytes));
           }
-        } catch (_) {}
+        }
+      } catch (_) {
+        // CORS or network error — skip this logo
       }
     }
 
@@ -38,6 +48,16 @@ class PdfExportService {
     }
 
     return doc.save();
+  }
+
+  /// Check if bytes start with PNG or JPEG magic bytes.
+  static bool _isRasterImage(Uint8List bytes) {
+    if (bytes.length < 4) return false;
+    // PNG: 89 50 4E 47
+    if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return true;
+    // JPEG: FF D8 FF
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) return true;
+    return false;
   }
 
   // ── Cover ─────────────────────────────────────────────────

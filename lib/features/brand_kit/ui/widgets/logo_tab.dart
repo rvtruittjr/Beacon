@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -167,10 +166,10 @@ class _LogoCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: url.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: url,
+                    ? Image.network(
+                        url,
                         fit: BoxFit.contain,
-                        errorWidget: (_, __, ___) => Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                           Icons.image_outlined,
                           size: 32,
                           color: mutedColor,
@@ -206,8 +205,8 @@ class _LogoCard extends StatelessWidget {
         child: GestureDetector(
           onTap: () => Navigator.of(ctx).pop(),
           child: InteractiveViewer(
-            child: CachedNetworkImage(
-              imageUrl: url,
+            child: Image.network(
+              url,
               fit: BoxFit.contain,
             ),
           ),

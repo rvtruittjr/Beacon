@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/design_tokens.dart';
@@ -27,28 +26,21 @@ class LogoVariationsSection extends StatelessWidget {
   }
 
   Widget _buildGrid(BuildContext context, Color mutedColor) {
-    // Use MediaQuery instead of LayoutBuilder to avoid IntrinsicHeight conflict
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final crossAxisCount = screenWidth > 1200 ? 4 : 2;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 1.0,
-      ),
-      itemCount: logos.length,
-      itemBuilder: (context, index) {
-        final logo = logos[index];
-        return _LogoCard(
-          name: logo['name'] as String? ?? 'Logo',
-          url: logo['file_url'] as String? ?? '',
-          mutedColor: mutedColor,
+    // Use Wrap instead of GridView to work correctly inside IntrinsicHeight
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      children: logos.map((logo) {
+        return SizedBox(
+          width: 140,
+          height: 140,
+          child: _LogoCard(
+            name: logo['name'] as String? ?? 'Logo',
+            url: logo['file_url'] as String? ?? '',
+            mutedColor: mutedColor,
+          ),
         );
-      },
+      }).toList(),
     );
   }
 
@@ -89,6 +81,7 @@ class _LogoCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => _showLightbox(context),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(AppRadius.md),
@@ -102,12 +95,12 @@ class _LogoCard extends StatelessWidget {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 child: url.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: url,
+                    ? Image.network(
+                        url,
                         fit: BoxFit.contain,
-                        errorWidget: (_, __, ___) => Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                           Icons.image_outlined,
                           size: 32,
                           color: mutedColor,
@@ -121,14 +114,19 @@ class _LogoCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: const EdgeInsets.only(
+                bottom: AppSpacing.xs,
+                left: AppSpacing.xs,
+                right: AppSpacing.xs,
+              ),
               child: Text(
                 name,
                 style: TextStyle(
                   color: mutedColor,
-                  fontSize: 12,
+                  fontSize: 11,
                 ),
                 overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],
@@ -146,8 +144,8 @@ class _LogoCard extends StatelessWidget {
         child: GestureDetector(
           onTap: () => Navigator.of(ctx).pop(),
           child: InteractiveViewer(
-            child: CachedNetworkImage(
-              imageUrl: url,
+            child: Image.network(
+              url,
               fit: BoxFit.contain,
             ),
           ),
