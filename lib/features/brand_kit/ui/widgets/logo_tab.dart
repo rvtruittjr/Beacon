@@ -148,7 +148,7 @@ class _LogoCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
 
     return GestureDetector(
       onTap: () => _showLightbox(context),

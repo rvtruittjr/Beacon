@@ -19,13 +19,19 @@ class BeakonApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final accent = ref.watch(accentColorProvider);
+    final sidebarBase = ref.watch(sidebarColorProvider);
+    final cardBase = ref.watch(cardColorProvider);
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
       title: 'Beacøn',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(accent: accent),
-      darkTheme: AppTheme.dark(accent: accent),
+      theme: AppTheme.light(accent: accent, sidebarBase: sidebarBase),
+      darkTheme: AppTheme.dark(
+        accent: accent,
+        sidebarBase: sidebarBase,
+        cardBase: cardBase,
+      ),
       themeMode: themeMode,
       routerConfig: router,
     );

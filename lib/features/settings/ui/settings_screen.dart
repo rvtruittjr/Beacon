@@ -264,6 +264,7 @@ class _AppearanceSection extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
     final currentMode = ref.watch(themeModeProvider);
 
     return AppCard(
@@ -299,6 +300,33 @@ class _AppearanceSection extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           const _AccentColorPicker(),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Sidebar Color',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const _SidebarColorPicker(),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Card Color',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Customizes card and surface backgrounds in dark mode.',
+            style: TextStyle(fontSize: 12, color: mutedColor),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const _CardColorPicker(),
         ],
       ),
     );
@@ -533,6 +561,321 @@ class _AccentColorPickerState extends ConsumerState<_AccentColorPicker> {
             onTap: () {
               ref.read(accentColorProvider.notifier).reset();
               _hexController.text = _colorToHex(AppColors.blockLime);
+            },
+            child: Text(
+              'Reset to default',
+              style: TextStyle(
+                fontSize: 12,
+                color: mutedColor,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Sidebar Color Picker ────────────────────────────────────────
+
+class _SidebarColorPicker extends ConsumerStatefulWidget {
+  const _SidebarColorPicker();
+
+  static const _presets = <(String, Color)>[
+    ('Indigo', Color(0xFF1A1A2E)),
+    ('Charcoal', Color(0xFF1C1C1C)),
+    ('Navy', Color(0xFF0D1B2A)),
+    ('Slate', Color(0xFF1E293B)),
+    ('Plum', Color(0xFF2D1B3D)),
+    ('Forest', Color(0xFF1A2E1A)),
+    ('Midnight', Color(0xFF0F172A)),
+    ('Graphite', Color(0xFF2D2D2D)),
+  ];
+
+  @override
+  ConsumerState<_SidebarColorPicker> createState() =>
+      _SidebarColorPickerState();
+}
+
+class _SidebarColorPickerState extends ConsumerState<_SidebarColorPicker> {
+  late TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hexController = TextEditingController(
+      text: _colorToHex(ref.read(sidebarColorProvider)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  String _colorToHex(Color color) {
+    final hex = color.value.toRadixString(16).padLeft(8, '0').substring(2);
+    return '#${hex.toUpperCase()}';
+  }
+
+  void _onPresetTap(Color color) {
+    ref.read(sidebarColorProvider.notifier).setColor(color);
+    _hexController.text = _colorToHex(color);
+  }
+
+  void _onHexSubmit(String value) {
+    final hex = value.trim().replaceFirst('#', '');
+    if (hex.length != 6) return;
+    try {
+      final color = Color(int.parse('FF$hex', radix: 16));
+      ref.read(sidebarColorProvider.notifier).setColor(color);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = ref.watch(sidebarColorProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: _SidebarColorPicker._presets.map((preset) {
+            final (name, color) = preset;
+            final isSelected = current.value == color.value;
+            return GestureDetector(
+              onTap: () => _onPresetTap(color),
+              child: Tooltip(
+                message: name,
+                child: AnimatedContainer(
+                  duration: AppDurations.fast,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: isSelected
+                        ? Border.all(
+                            color: isDark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimaryLight,
+                            width: 2,
+                          )
+                        : Border.all(
+                            color: mutedColor.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: 140,
+          child: TextField(
+            controller: _hexController,
+            onSubmitted: _onHexSubmit,
+            style: TextStyle(
+              fontSize: 13,
+              fontFamily: 'monospace',
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimaryLight,
+            ),
+            decoration: InputDecoration(
+              hintText: '#1A1A2E',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              prefixIcon: Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.only(left: 8, right: 4),
+                decoration: BoxDecoration(
+                  color: current,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              prefixIconConstraints:
+                  const BoxConstraints(maxWidth: 36, maxHeight: 20),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (current.value != AppColors.sidebarBg.value)
+          GestureDetector(
+            onTap: () {
+              ref.read(sidebarColorProvider.notifier).reset();
+              _hexController.text = _colorToHex(AppColors.sidebarBg);
+            },
+            child: Text(
+              'Reset to default',
+              style: TextStyle(
+                fontSize: 12,
+                color: mutedColor,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Card Color Picker ──────────────────────────────────────────
+
+class _CardColorPicker extends ConsumerStatefulWidget {
+  const _CardColorPicker();
+
+  static const _presets = <(String, Color)>[
+    ('Default', Color(0xFF1C1C26)),
+    ('Charcoal', Color(0xFF222222)),
+    ('Onyx', Color(0xFF1A1A1A)),
+    ('Slate', Color(0xFF1E2530)),
+    ('Plum', Color(0xFF251B30)),
+    ('Ocean', Color(0xFF1B2430)),
+    ('Olive', Color(0xFF1E241B)),
+    ('Graphite', Color(0xFF252525)),
+  ];
+
+  @override
+  ConsumerState<_CardColorPicker> createState() => _CardColorPickerState();
+}
+
+class _CardColorPickerState extends ConsumerState<_CardColorPicker> {
+  late TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hexController = TextEditingController(
+      text: _colorToHex(ref.read(cardColorProvider)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  String _colorToHex(Color color) {
+    final hex = color.value.toRadixString(16).padLeft(8, '0').substring(2);
+    return '#${hex.toUpperCase()}';
+  }
+
+  void _onPresetTap(Color color) {
+    ref.read(cardColorProvider.notifier).setColor(color);
+    _hexController.text = _colorToHex(color);
+  }
+
+  void _onHexSubmit(String value) {
+    final hex = value.trim().replaceFirst('#', '');
+    if (hex.length != 6) return;
+    try {
+      final color = Color(int.parse('FF$hex', radix: 16));
+      ref.read(cardColorProvider.notifier).setColor(color);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = ref.watch(cardColorProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: _CardColorPicker._presets.map((preset) {
+            final (name, color) = preset;
+            final isSelected = current.value == color.value;
+            return GestureDetector(
+              onTap: () => _onPresetTap(color),
+              child: Tooltip(
+                message: name,
+                child: AnimatedContainer(
+                  duration: AppDurations.fast,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: isSelected
+                        ? Border.all(
+                            color: isDark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimaryLight,
+                            width: 2,
+                          )
+                        : Border.all(
+                            color: mutedColor.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: 140,
+          child: TextField(
+            controller: _hexController,
+            onSubmitted: _onHexSubmit,
+            style: TextStyle(
+              fontSize: 13,
+              fontFamily: 'monospace',
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimaryLight,
+            ),
+            decoration: InputDecoration(
+              hintText: '#1C1C26',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              prefixIcon: Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.only(left: 8, right: 4),
+                decoration: BoxDecoration(
+                  color: current,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              prefixIconConstraints:
+                  const BoxConstraints(maxWidth: 36, maxHeight: 20),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (current.value != AppColors.surfaceDark.value)
+          GestureDetector(
+            onTap: () {
+              ref.read(cardColorProvider.notifier).reset();
+              _hexController.text = _colorToHex(AppColors.surfaceDark);
             },
             child: Text(
               'Reset to default',

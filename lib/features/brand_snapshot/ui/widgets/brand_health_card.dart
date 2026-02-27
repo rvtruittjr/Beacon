@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../core/config/beacon_colors.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../models/brand_health_score.dart';
@@ -19,7 +20,7 @@ class BrandHealthCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.sidebarBg,
+        color: context.beacon.sidebarBg,
         borderRadius: BorderRadius.all(AppRadius.xl),
       ),
       child: isWide
@@ -64,7 +65,7 @@ class BrandHealthCard extends StatelessWidget {
               child: CustomPaint(
                 painter: _HealthArcPainter(
                   progress: progress,
-                  trackColor: AppColors.sidebarSurface,
+                  trackColor: context.beacon.sidebarSurface,
                   progressColor: progressColor,
                 ),
                 child: Center(
@@ -75,7 +76,7 @@ class BrandHealthCard extends StatelessWidget {
                           text: '$displayScore',
                           style: AppFonts.clashDisplay(
                             fontSize: 36,
-                            color: AppColors.sidebarText,
+                            color: context.beacon.sidebarText,
                           ),
                         ),
                         TextSpan(
@@ -83,7 +84,7 @@ class BrandHealthCard extends StatelessWidget {
                           style: AppFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.sidebarMuted,
+                            color: context.beacon.sidebarMuted,
                           ),
                         ),
                       ],
@@ -98,7 +99,7 @@ class BrandHealthCard extends StatelessWidget {
               style: AppFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.sidebarMuted,
+                color: context.beacon.sidebarMuted,
               ),
             ),
           ],
@@ -130,10 +131,10 @@ class _ChecklistRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor =
-        section.isComplete ? AppColors.success : AppColors.sidebarMuted;
+        section.isComplete ? AppColors.success : context.beacon.sidebarMuted;
     final icon = section.isComplete ? LucideIcons.checkCircle2 : LucideIcons.circle;
     final textColor =
-        section.isComplete ? AppColors.sidebarText : AppColors.sidebarMuted;
+        section.isComplete ? context.beacon.sidebarText : context.beacon.sidebarMuted;
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -155,7 +156,7 @@ class _ChecklistRow extends StatelessWidget {
             Icon(
               LucideIcons.chevronRight,
               size: 14,
-              color: AppColors.sidebarMuted,
+              color: context.beacon.sidebarMuted,
             ),
         ],
       ),

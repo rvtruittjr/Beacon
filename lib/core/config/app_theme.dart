@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'beacon_colors.dart';
 import 'design_tokens.dart';
 
 class AppTheme {
@@ -13,15 +14,24 @@ class AppTheme {
   }
 
   // ── Dark Theme ──────────────────────────────────────────────
-  static ThemeData dark({Color accent = AppColors.blockLime}) {
+  static ThemeData dark({
+    Color accent = AppColors.blockLime,
+    Color sidebarBase = AppColors.sidebarBg,
+    Color cardBase = AppColors.surfaceDark,
+  }) {
     final base = ThemeData.dark(useMaterial3: true);
     final textTheme = GoogleFonts.interTextTheme(base.textTheme);
     final onAccent = _textOnColor(accent);
+    final bc = BeaconColors.derive(
+      sidebarBase: sidebarBase,
+      isDark: true,
+      cardBase: cardBase,
+    );
 
     return base.copyWith(
-      scaffoldBackgroundColor: AppColors.backgroundDark,
+      scaffoldBackgroundColor: bc.cardBackground,
       colorScheme: ColorScheme.dark(
-        surface: AppColors.surfaceDark,
+        surface: bc.cardSurface,
         onSurface: AppColors.textPrimaryDark,
         primary: accent,
         onPrimary: onAccent,
@@ -29,8 +39,8 @@ class AppTheme {
         onSecondary: AppColors.textOnViolet,
         error: AppColors.error,
         onError: Colors.white,
-        outline: AppColors.borderDark,
-        surfaceContainerHighest: AppColors.surfaceMidDark,
+        outline: bc.cardBorder,
+        surfaceContainerHighest: bc.cardSurfaceMid,
       ),
       textTheme: textTheme.apply(
         bodyColor: AppColors.textPrimaryDark,
@@ -41,12 +51,12 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.xl),
         ),
-        color: AppColors.surfaceDark,
+        color: bc.cardSurface,
         surfaceTintColor: Colors.transparent,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceMidDark,
+        fillColor: bc.cardSurfaceMid,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: 14,
@@ -69,7 +79,7 @@ class AppTheme {
       dropdownMenuTheme: DropdownMenuThemeData(
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surfaceMidDark,
+          fillColor: bc.cardSurfaceMid,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(AppRadius.md),
             borderSide: BorderSide.none,
@@ -99,7 +109,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(AppRadius.full),
           ),
-          side: const BorderSide(color: AppColors.borderDark, width: 1.5),
+          side: BorderSide(color: bc.cardBorder, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         ),
       ),
@@ -111,12 +121,12 @@ class AppTheme {
       ),
       dividerTheme: DividerThemeData(
         thickness: 1,
-        color: AppColors.borderDark.withValues(alpha: 0.5),
+        color: bc.cardBorder.withValues(alpha: 0.5),
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: AppColors.backgroundDark,
+        backgroundColor: bc.cardBackground,
         foregroundColor: AppColors.textPrimaryDark,
       ),
       popupMenuTheme: PopupMenuThemeData(
@@ -124,32 +134,40 @@ class AppTheme {
           borderRadius: BorderRadius.all(AppRadius.lg),
         ),
         elevation: 8,
-        color: AppColors.surfaceDark,
+        color: bc.cardSurface,
       ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.x2l),
         ),
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: bc.cardSurface,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        shape: RoundedRectangleBorder(
+      bottomSheetTheme: BottomSheetThemeData(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: AppRadius.x2l),
         ),
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: bc.cardSurface,
       ),
       tabBarTheme: const TabBarThemeData(
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
       ),
+      extensions: [bc],
     );
   }
 
   // ── Light Theme ─────────────────────────────────────────────
-  static ThemeData light({Color accent = AppColors.blockLime}) {
+  static ThemeData light({
+    Color accent = AppColors.blockLime,
+    Color sidebarBase = AppColors.sidebarBg,
+  }) {
     final base = ThemeData.light(useMaterial3: true);
     final textTheme = GoogleFonts.interTextTheme(base.textTheme);
     final onAccent = _textOnColor(accent);
+    final bc = BeaconColors.derive(
+      sidebarBase: sidebarBase,
+      isDark: false,
+    );
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.backgroundLight,
@@ -276,6 +294,7 @@ class AppTheme {
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
       ),
+      extensions: [bc],
     );
   }
 }

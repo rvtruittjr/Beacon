@@ -21,7 +21,7 @@ class AppBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final (bgColor, fgColor) = _resolveColors(isDark);
+    final (bgColor, fgColor) = _resolveColors(context, isDark);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -40,16 +40,14 @@ class AppBadge extends StatelessWidget {
     );
   }
 
-  (Color bg, Color fg) _resolveColors(bool isDark) {
+  (Color bg, Color fg) _resolveColors(BuildContext context, bool isDark) {
     if (variant == AppBadgeVariant.platform && platformName != null) {
       return _platformColors(platformName!);
     }
 
     return switch (variant) {
       AppBadgeVariant.standard => (
-          isDark
-              ? AppColors.surfaceMidDark
-              : AppColors.surfaceMidLight,
+          Theme.of(context).colorScheme.surfaceContainerHighest,
           isDark
               ? AppColors.textPrimaryDark
               : AppColors.textPrimaryLight,

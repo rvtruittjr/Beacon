@@ -44,8 +44,7 @@ class BrandListScreen extends ConsumerWidget {
   }
 
   Widget _buildGrid(BuildContext context, WidgetRef ref, List brands) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = Theme.of(context).colorScheme.outline;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.lg),

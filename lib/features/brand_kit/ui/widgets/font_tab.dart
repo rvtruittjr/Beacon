@@ -63,9 +63,7 @@ class FontTab extends ConsumerWidget {
                     child: ListView.separated(
                       itemCount: fonts.length,
                       separatorBuilder: (_, __) => Divider(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                       itemBuilder: (context, index) {
                         return _FontRow(
@@ -632,7 +630,7 @@ class _SourceToggle extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? Theme.of(context).colorScheme.primary
-              : (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.all(AppRadius.full),
         ),
         child: Text(

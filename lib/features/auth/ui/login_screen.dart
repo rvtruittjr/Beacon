@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/config/beacon_colors.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/errors/app_exception.dart';
@@ -76,9 +77,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor =
-        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
     final isWide = MediaQuery.sizeOf(context).width > 900;
 
     return Scaffold(
@@ -108,11 +109,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Widget _buildSplashPanel() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.sidebarBg, AppColors.sidebarSurface],
+          colors: [context.beacon.sidebarBg, context.beacon.sidebarSurface],
         ),
       ),
       padding: const EdgeInsets.symmetric(
@@ -223,7 +224,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       constraints: const BoxConstraints(maxWidth: 420),
       padding: const EdgeInsets.all(AppSpacing.x2l),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.all(AppRadius.x2l),
         boxShadow: isDark ? [] : AppShadows.lg,
       ),

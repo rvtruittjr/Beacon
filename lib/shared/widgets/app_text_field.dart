@@ -48,8 +48,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = theme.colorScheme.outline;
 
     final isObscured = widget.isPassword ? _obscured : widget.obscureText;
 

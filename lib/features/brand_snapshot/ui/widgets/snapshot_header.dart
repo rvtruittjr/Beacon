@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../core/config/beacon_colors.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -27,7 +28,7 @@ class SnapshotHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.sidebarBg,
+        color: context.beacon.sidebarBg,
         borderRadius: BorderRadius.all(AppRadius.xl),
       ),
       child: Row(
@@ -41,7 +42,7 @@ class SnapshotHeader extends StatelessWidget {
                   brand.name,
                   style: AppFonts.clashDisplay(
                     fontSize: 36,
-                    color: AppColors.sidebarText,
+                    color: context.beacon.sidebarText,
                   ),
                 ),
                 if (brand.description != null &&
@@ -52,7 +53,7 @@ class SnapshotHeader extends StatelessWidget {
                       brand.description!,
                       style: AppFonts.inter(
                         fontSize: 14,
-                        color: AppColors.sidebarMuted,
+                        color: context.beacon.sidebarMuted,
                       ),
                     ),
                   ),
@@ -61,7 +62,7 @@ class SnapshotHeader extends StatelessWidget {
                   'Last updated ${brand.createdAt.timeAgo()}',
                   style: AppFonts.inter(
                     fontSize: 12,
-                    color: AppColors.sidebarMuted,
+                    color: context.beacon.sidebarMuted,
                   ),
                 ),
               ],

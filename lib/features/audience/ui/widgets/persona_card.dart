@@ -19,8 +19,7 @@ class PersonaCard extends StatelessWidget {
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),

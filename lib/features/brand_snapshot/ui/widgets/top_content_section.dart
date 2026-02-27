@@ -82,8 +82,7 @@ class _ArchiveCardCompact extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
@@ -113,15 +112,13 @@ class _ArchiveCardCompact extends StatelessWidget {
                     imageUrl: thumbnailUrl,
                     fit: BoxFit.cover,
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceMidDark,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       child: Icon(Icons.play_circle_outline,
                           color: mutedColor, size: 32),
                     ),
                   )
                 : Container(
-                    color: isDark
-                        ? AppColors.surfaceMidDark
-                        : AppColors.surfaceMidLight,
+                    color: theme.colorScheme.surfaceContainerHighest,
                     child: Icon(Icons.play_circle_outline,
                         color: mutedColor, size: 32),
                   ),

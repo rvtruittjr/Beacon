@@ -32,11 +32,9 @@ class _ShimmerCardState extends State<ShimmerCard>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor =
-        isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight;
-    final highlightColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final theme = Theme.of(context);
+    final baseColor = theme.colorScheme.surfaceContainerHighest;
+    final highlightColor = theme.colorScheme.surface;
 
     return AnimatedBuilder(
       animation: _controller,

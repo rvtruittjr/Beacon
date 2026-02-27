@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/config/beacon_colors.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/providers/app_providers.dart';
@@ -49,7 +50,7 @@ class BrandSwitcher extends ConsumerWidget {
           vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: AppColors.sidebarSurface,
+          color: context.beacon.sidebarSurface,
           borderRadius: BorderRadius.all(AppRadius.md),
         ),
         child: Row(
@@ -60,15 +61,15 @@ class BrandSwitcher extends ConsumerWidget {
                 style: AppFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.sidebarText,
+                  color: context.beacon.sidebarText,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(
+            Icon(
               LucideIcons.chevronDown,
               size: 16,
-              color: AppColors.sidebarMuted,
+              color: context.beacon.sidebarMuted,
             ),
           ],
         ),

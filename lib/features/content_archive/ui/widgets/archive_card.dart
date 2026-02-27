@@ -54,8 +54,7 @@ class _ArchiveCardState extends State<ArchiveCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
@@ -285,8 +284,7 @@ class ArchiveCardCompact extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;

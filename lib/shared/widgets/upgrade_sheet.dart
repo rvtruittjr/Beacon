@@ -33,9 +33,9 @@ class _UpgradeSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = theme.colorScheme.surface;
 
     return Container(
       decoration: BoxDecoration(
@@ -51,7 +51,7 @@ class _UpgradeSheetContent extends StatelessWidget {
             width: 32,
             height: 4,
             decoration: BoxDecoration(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              color: theme.colorScheme.outline,
               borderRadius: BorderRadius.all(AppRadius.full),
             ),
           ),

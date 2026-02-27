@@ -420,7 +420,7 @@ class _FilterPill extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive
                 ? Theme.of(context).colorScheme.primary
-                : (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.all(AppRadius.full),
           ),
           child: Text(
@@ -464,9 +464,7 @@ class _CollectionChip extends StatelessWidget {
             border: isActive
                 ? null
                 : Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
           ),
           child: Text(

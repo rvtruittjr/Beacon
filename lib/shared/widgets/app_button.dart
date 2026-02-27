@@ -144,7 +144,7 @@ class _AppButtonState extends State<AppButton> {
   }
 
   (Color bg, Color fg, BorderSide? border) _resolveColors(bool isDark) {
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = Theme.of(context).colorScheme.outline;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;

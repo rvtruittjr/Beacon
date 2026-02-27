@@ -23,7 +23,7 @@ class SocialAccountsSection extends ConsumerWidget {
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = theme.colorScheme.outline;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +247,7 @@ class _AccountRowState extends State<_AccountRow> {
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = theme.colorScheme.outline;
     final account = widget.account;
 
     return MouseRegion(

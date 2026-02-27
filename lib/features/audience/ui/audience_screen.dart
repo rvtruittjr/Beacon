@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/config/beacon_colors.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/providers/app_providers.dart';
@@ -140,9 +141,8 @@ class _AudienceScreenBodyState extends ConsumerState<_AudienceScreenBody> {
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final surfaceColor = theme.colorScheme.surface;
+    final borderColor = theme.colorScheme.outline;
     final audience = ref.watch(audienceEditorProvider);
     final notifier = ref.read(audienceEditorProvider.notifier);
 
@@ -462,23 +462,23 @@ class _EmptyState extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.x2l),
           decoration: BoxDecoration(
-            color: AppColors.sidebarBg,
+            color: context.beacon.sidebarBg,
             borderRadius: BorderRadius.all(AppRadius.xl),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 LucideIcons.users,
                 size: 48,
-                color: AppColors.sidebarMuted,
+                color: context.beacon.sidebarMuted,
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Who are you talking to?',
                 style: AppFonts.clashDisplay(
                   fontSize: 28,
-                  color: AppColors.sidebarText,
+                  color: context.beacon.sidebarText,
                 ),
                 textAlign: TextAlign.center,
               ),

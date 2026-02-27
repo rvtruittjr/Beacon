@@ -23,8 +23,7 @@ class ArchetypeSelector {
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final surfaceColor =
-        isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight;
+    final surfaceColor = theme.colorScheme.surfaceContainerHighest;
 
     showModalBottomSheet(
       context: context,
@@ -84,9 +83,7 @@ class ArchetypeSelector {
                           borderRadius:
                               BorderRadius.all(AppRadius.md),
                           border: Border.all(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight),
+                              color: theme.colorScheme.outline),
                         ),
                         child: Column(
                           crossAxisAlignment:

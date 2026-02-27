@@ -27,8 +27,8 @@ class _BrandCardState extends State<BrandCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final surfaceColor = theme.colorScheme.surface;
+    final borderColor = theme.colorScheme.outline;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
     return MouseRegion(

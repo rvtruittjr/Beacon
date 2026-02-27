@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/config/beacon_colors.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -57,7 +58,7 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.sidebarBg,
+      backgroundColor: context.beacon.sidebarBg,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -89,7 +90,7 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
                   'This brand kit is protected.',
                   style: AppFonts.clashDisplay(
                     fontSize: 32,
-                    color: AppColors.sidebarText,
+                    color: context.beacon.sidebarText,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -100,7 +101,7 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
                   'Enter the password to view this brand kit.',
                   style: AppFonts.inter(
                     fontSize: 15,
-                    color: AppColors.sidebarMuted,
+                    color: context.beacon.sidebarMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -120,12 +121,12 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
                     obscureText: true,
                     autofocus: true,
                     enabled: !_locked,
-                    style: const TextStyle(color: AppColors.sidebarText),
+                    style: TextStyle(color: context.beacon.sidebarText),
                     decoration: InputDecoration(
                       hintText: 'Password',
-                      hintStyle: const TextStyle(color: AppColors.sidebarMuted),
+                      hintStyle: TextStyle(color: context.beacon.sidebarMuted),
                       filled: true,
-                      fillColor: AppColors.sidebarSurface,
+                      fillColor: context.beacon.sidebarSurface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(AppRadius.md),
                         borderSide: BorderSide.none,

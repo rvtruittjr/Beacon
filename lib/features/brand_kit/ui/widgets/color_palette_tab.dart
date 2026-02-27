@@ -219,7 +219,7 @@ class _ColorSwatchItemState extends State<_ColorSwatchItem> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color:
-                          isDark ? AppColors.borderDark : AppColors.borderLight,
+                          Theme.of(context).colorScheme.outline,
                       width: 1,
                     ),
                   ),

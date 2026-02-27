@@ -262,9 +262,7 @@ class _FilterPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.blockCoral
-              : isDark
-                  ? AppColors.surfaceMidDark
-                  : AppColors.surfaceMidLight,
+              : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.all(AppRadius.full),
         ),
         child: Text(
@@ -303,8 +301,7 @@ class _DropdownPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bgColor =
-        isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight;
+    final bgColor = theme.colorScheme.surfaceContainerHighest;
     final fgColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
@@ -321,7 +318,7 @@ class _DropdownPill extends StatelessWidget {
           icon: Icon(LucideIcons.chevronDown, size: 14, color: fgColor),
           isDense: true,
           style: TextStyle(color: fgColor, fontSize: 13),
-          dropdownColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          dropdownColor: theme.colorScheme.surface,
           items: [
             DropdownMenuItem<String>(
               value: null,

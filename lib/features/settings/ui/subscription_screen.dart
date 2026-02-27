@@ -130,7 +130,7 @@ class _IntervalToggle extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.all(AppRadius.full),
       ),
       padding: const EdgeInsets.all(4),
@@ -160,7 +160,7 @@ class _IntervalToggle extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: isActive
-              ? (isDark ? AppColors.surfaceDark : AppColors.surfaceLight)
+              ? Theme.of(context).colorScheme.surface
               : Colors.transparent,
           borderRadius: BorderRadius.all(AppRadius.full),
           boxShadow: isActive && !isDark ? AppShadows.sm : null,
@@ -219,13 +219,15 @@ class _FreePlanCard extends StatelessWidget {
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.all(AppRadius.lg),
         border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          color: theme.colorScheme.outline,
         ),
         boxShadow: isDark ? null : AppShadows.sm,
       ),
@@ -323,10 +325,12 @@ class _ProPlanCardState extends ConsumerState<_ProPlanCard> {
     final price = widget.interval == 'year' ? '\$99' : '\$12';
     final period = widget.interval == 'year' ? '/year' : '/month';
 
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.all(AppRadius.lg),
         border: Border.all(color: AppColors.blockViolet, width: 2),
         boxShadow: isDark ? null : AppShadows.md,
@@ -496,15 +500,16 @@ class _FeatureComparisonTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = theme.colorScheme.outline;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.all(AppRadius.lg),
         border: Border.all(color: borderColor),
       ),
@@ -515,9 +520,7 @@ class _FeatureComparisonTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.surfaceMidDark
-                  : AppColors.surfaceMidLight,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius:
                   const BorderRadius.vertical(top: AppRadius.lg),
             ),

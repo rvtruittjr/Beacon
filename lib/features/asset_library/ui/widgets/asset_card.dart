@@ -29,8 +29,7 @@ class _AssetCardState extends State<AssetCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor = theme.colorScheme.surface;
     final textColor =
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
@@ -142,8 +141,7 @@ class _AssetCardState extends State<AssetCard> {
 
   Widget _buildThumbnail(bool isDark, Color mutedColor) {
     final asset = widget.asset;
-    final bgColor =
-        isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight;
+    final bgColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (asset.isImage) {
       return CachedNetworkImage(

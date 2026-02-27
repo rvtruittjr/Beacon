@@ -25,8 +25,8 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final surfaceColor = theme.colorScheme.surface;
+    final borderColor = theme.colorScheme.outline;
 
     if (variant == AppCardVariant.feature && blockColor != null) {
       return _buildFeatureCard(surfaceColor, borderColor, isDark);

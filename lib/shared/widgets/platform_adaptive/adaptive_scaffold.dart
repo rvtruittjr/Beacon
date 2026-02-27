@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/config/beacon_colors.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/providers/app_providers.dart';
@@ -68,8 +69,9 @@ class _DesktopLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -81,7 +83,7 @@ class _DesktopLayout extends ConsumerWidget {
             Container(
               width: 240,
               decoration: BoxDecoration(
-                color: AppColors.sidebarBg,
+                color: context.beacon.sidebarBg,
                 borderRadius: BorderRadius.all(AppRadius.x2l),
               ),
               child: Column(
@@ -122,7 +124,7 @@ class _DesktopLayout extends ConsumerWidget {
                           'Beacøn',
                           style: AppFonts.clashDisplay(
                             fontSize: 22,
-                            color: AppColors.sidebarText,
+                            color: context.beacon.sidebarText,
                           ),
                         ),
                       ],
@@ -214,7 +216,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
             color: isActive
                 ? accent
                 : _isHovered
-                    ? AppColors.sidebarSurface
+                    ? context.beacon.sidebarSurface
                     : Colors.transparent,
             borderRadius: BorderRadius.all(AppRadius.md),
           ),
@@ -226,8 +228,8 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                 color: isActive
                     ? onAccent
                     : _isHovered
-                        ? AppColors.sidebarText
-                        : AppColors.sidebarMuted,
+                        ? context.beacon.sidebarText
+                        : context.beacon.sidebarMuted,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -239,8 +241,8 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                     color: isActive
                         ? onAccent
                         : _isHovered
-                            ? AppColors.sidebarText
-                            : AppColors.sidebarMuted,
+                            ? context.beacon.sidebarText
+                            : context.beacon.sidebarMuted,
                   ),
                 ),
               ),
@@ -274,7 +276,7 @@ class _SidebarUserCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.sidebarSurface,
+        color: context.beacon.sidebarSurface,
         borderRadius: BorderRadius.all(AppRadius.lg),
       ),
       child: Row(
@@ -304,7 +306,7 @@ class _SidebarUserCard extends ConsumerWidget {
                   style: AppFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.sidebarText,
+                    color: context.beacon.sidebarText,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -313,7 +315,7 @@ class _SidebarUserCard extends ConsumerWidget {
                     email,
                     style: AppFonts.inter(
                       fontSize: 11,
-                      color: AppColors.sidebarMuted,
+                      color: context.beacon.sidebarMuted,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -363,7 +365,7 @@ class _MobileLayout extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: AppColors.sidebarBg,
+            color: context.beacon.sidebarBg,
             borderRadius: BorderRadius.all(AppRadius.full),
             boxShadow: AppShadows.lg,
           ),
@@ -398,7 +400,7 @@ class _MobileLayout extends StatelessWidget {
                           size: 22,
                           color: isActive
                               ? Theme.of(context).colorScheme.primary
-                              : AppColors.sidebarMuted,
+                              : context.beacon.sidebarMuted,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -410,7 +412,7 @@ class _MobileLayout extends StatelessWidget {
                                 : FontWeight.w400,
                             color: isActive
                                 ? Theme.of(context).colorScheme.primary
-                                : AppColors.sidebarMuted,
+                                : context.beacon.sidebarMuted,
                           ),
                         ),
                       ],
@@ -435,7 +437,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
         AppSpacing.md, 0, AppSpacing.md, AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppColors.sidebarBg,
+        color: context.beacon.sidebarBg,
         borderRadius: BorderRadius.all(AppRadius.xl),
       ),
       child: SafeArea(
@@ -449,7 +451,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.sidebarMuted,
+                  color: context.beacon.sidebarMuted,
                   borderRadius: BorderRadius.all(AppRadius.full),
                 ),
               ),
@@ -482,7 +484,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                           size: 20,
                           color: isActive
                               ? Theme.of(context).colorScheme.onPrimary
-                              : AppColors.sidebarMuted,
+                              : context.beacon.sidebarMuted,
                         ),
                         const SizedBox(width: AppSpacing.md),
                         Text(
@@ -493,7 +495,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                                 isActive ? FontWeight.w600 : FontWeight.w500,
                             color: isActive
                                 ? Theme.of(context).colorScheme.onPrimary
-                                : AppColors.sidebarText,
+                                : context.beacon.sidebarText,
                           ),
                         ),
                       ],
