@@ -1,8 +1,9 @@
+import 'dart:html' as html;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:printing/printing.dart';
 
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
@@ -252,10 +253,21 @@ Future<void> _exportPdf(BuildContext context, SnapshotData data) async {
 
   try {
     final bytes = await PdfExportService.generate(data);
-    await Printing.layoutPdf(
-      onLayout: (_) => bytes,
-      name: '${data.brand.name} - Brand Guidelines',
-    );
+    final fileName = '${data.brand.name} - Brand Guidelines.pdf';
+
+    // Use browser download instead of Printing.layoutPdf (not supported on web)
+    final blob = html.Blob([bytes], 'application/pdf');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PDF downloaded!')),
+      );
+    }
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
