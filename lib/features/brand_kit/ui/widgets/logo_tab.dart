@@ -10,6 +10,7 @@ import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/storage_image.dart';
 import '../../providers/brand_kit_provider.dart';
 
 class LogoTab extends ConsumerWidget {
@@ -166,10 +167,10 @@ class _LogoCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: url.isNotEmpty
-                    ? Image.network(
-                        url,
+                    ? StorageImage(
+                        url: url,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
+                        errorBuilder: (ctx) => Icon(
                           Icons.image_outlined,
                           size: 32,
                           color: mutedColor,
@@ -205,8 +206,8 @@ class _LogoCard extends StatelessWidget {
         child: GestureDetector(
           onTap: () => Navigator.of(ctx).pop(),
           child: InteractiveViewer(
-            child: Image.network(
-              url,
+            child: StorageImage(
+              url: url,
               fit: BoxFit.contain,
             ),
           ),

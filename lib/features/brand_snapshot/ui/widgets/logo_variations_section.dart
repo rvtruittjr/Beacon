@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/storage_image.dart';
 
 class LogoVariationsSection extends StatelessWidget {
   const LogoVariationsSection({super.key, required this.logos});
@@ -97,10 +98,10 @@ class _LogoCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: url.isNotEmpty
-                    ? Image.network(
-                        url,
+                    ? StorageImage(
+                        url: url,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
+                        errorBuilder: (ctx) => Icon(
                           Icons.image_outlined,
                           size: 32,
                           color: mutedColor,
@@ -144,8 +145,8 @@ class _LogoCard extends StatelessWidget {
         child: GestureDetector(
           onTap: () => Navigator.of(ctx).pop(),
           child: InteractiveViewer(
-            child: Image.network(
-              url,
+            child: StorageImage(
+              url: url,
               fit: BoxFit.contain,
             ),
           ),

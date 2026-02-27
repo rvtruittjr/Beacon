@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
-import '../../../core/services/storage_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../audience/models/social_account_model.dart';
 import '../../brands/models/brand_model.dart';
@@ -84,27 +83,6 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
     ),
   ]);
 
-  // Convert logo public URLs to signed URLs for web CORS compatibility
-  final logos = List<Map<String, dynamic>>.from(results[7] as List);
-  final logoUrls = logos
-      .map((l) => (l['file_url'] as String?) ?? '')
-      .where((u) => u.isNotEmpty)
-      .toList();
-
-  List<Map<String, dynamic>> signedLogos = logos;
-  if (logoUrls.isNotEmpty) {
-    final signedUrls = await StorageService.toSignedUrls(logoUrls);
-    final urlMap = <String, String>{};
-    for (int i = 0; i < logoUrls.length; i++) {
-      urlMap[logoUrls[i]] = signedUrls[i];
-    }
-    signedLogos = logos.map((l) {
-      final orig = (l['file_url'] as String?) ?? '';
-      if (orig.isEmpty || !urlMap.containsKey(orig)) return l;
-      return {...l, 'file_url': urlMap[orig]};
-    }).toList();
-  }
-
   return SnapshotData(
     brand: BrandModel.fromJson(results[0] as Map<String, dynamic>),
     colors: List<Map<String, dynamic>>.from(results[1] as List),
@@ -113,7 +91,7 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
     audience: results[4] as Map<String, dynamic>?,
     pillars: List<Map<String, dynamic>>.from(results[5] as List),
     topContent: List<Map<String, dynamic>>.from(results[6] as List),
-    logos: signedLogos,
+    logos: List<Map<String, dynamic>>.from(results[7] as List),
     socialAccounts: (results[8] as List)
         .map((e) => SocialAccountModel.fromJson(e as Map<String, dynamic>))
         .toList(),

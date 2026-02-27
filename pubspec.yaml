@@ -26,6 +26,7 @@ dependencies:
   http: ^1.6.0
   pdf: ^3.11.1
   printing: ^5.13.3
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
