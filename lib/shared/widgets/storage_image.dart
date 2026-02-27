@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 
+import '../../core/config/app_config.dart';
 import '../../core/services/supabase_service.dart';
 
 /// Displays an image stored in Supabase Storage.
 ///
-/// Uses two download strategies for maximum reliability on Flutter web:
-///   1. Direct HTTP GET on the URL (works for signed URLs)
-///   2. Supabase SDK authenticated download (works for private buckets)
+/// Downloads via an authenticated HTTP request directly to the Supabase
+/// Storage REST API, completely bypassing both public URLs (which return 400
+/// on private buckets) and the SDK's download() method (which can fail on web).
 class StorageImage extends StatefulWidget {
   const StorageImage({
     super.key,
@@ -59,38 +60,43 @@ class _StorageImageState extends State<StorageImage> {
 
     _isSvg = widget.url.split('?').first.toLowerCase().endsWith('.svg');
 
-    // ── Strategy 1: Direct HTTP fetch (works for signed URLs) ──
+    final path = _extractPath(widget.url);
+    if (path == null) {
+      if (mounted) setState(() { _hasError = true; _loading = false; });
+      return;
+    }
+
+    // Build an authenticated request to the Supabase Storage REST API.
+    // This bypasses public URLs (400 on private buckets) and the SDK's
+    // download() method (unreliable on Flutter web).
+    final token = SupabaseService.client.auth.currentSession?.accessToken;
+    if (token == null) {
+      if (mounted) setState(() { _hasError = true; _loading = false; });
+      return;
+    }
+
+    // Encode each path segment individually to handle spaces/special chars
+    final encodedPath =
+        path.split('/').map(Uri.encodeComponent).join('/');
+    final requestUrl = Uri.parse(
+      '${AppConfig.supabaseUrl}/storage/v1/object/${widget.bucket}/$encodedPath',
+    );
+
     try {
-      final response = await http.get(Uri.parse(widget.url));
+      final response = await http.get(requestUrl, headers: {
+        'Authorization': 'Bearer $token',
+        'apikey': AppConfig.supabaseAnonKey,
+      });
+
+      if (!mounted) return;
+
       if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-        if (mounted) {
-          setState(() { _bytes = response.bodyBytes; _loading = false; });
-        }
-        return;
+        setState(() { _bytes = response.bodyBytes; _loading = false; });
+      } else {
+        setState(() { _hasError = true; _loading = false; });
       }
     } catch (_) {
-      // Direct fetch failed — try SDK download next
-    }
-
-    // ── Strategy 2: Supabase SDK authenticated download ──
-    final path = _extractPath(widget.url);
-    if (path != null) {
-      try {
-        final bytes = await SupabaseService.client.storage
-            .from(widget.bucket)
-            .download(path);
-        if (mounted && bytes.isNotEmpty) {
-          setState(() { _bytes = bytes; _loading = false; });
-          return;
-        }
-      } catch (_) {
-        // SDK download also failed
-      }
-    }
-
-    // Both strategies failed
-    if (mounted) {
-      setState(() { _hasError = true; _loading = false; });
+      if (mounted) setState(() { _hasError = true; _loading = false; });
     }
   }
 

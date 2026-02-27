@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../core/config/app_config.dart';
 import '../../../core/services/supabase_service.dart';
 import '../providers/snapshot_provider.dart';
 
@@ -65,21 +66,30 @@ class PdfExportService {
     return null;
   }
 
-  /// Download image bytes using dual strategy: direct HTTP then SDK fallback.
+  /// Download image bytes via authenticated HTTP request to Storage REST API.
   static Future<Uint8List?> _downloadImage(String url) async {
-    // Strategy 1: Direct HTTP GET (works for signed URLs)
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-        return response.bodyBytes;
-      }
-    } catch (_) {}
-
-    // Strategy 2: SDK authenticated download
     final path = _extractPath(url);
     if (path == null) return null;
+
     final decoded = Uri.decodeFull(path);
-    return SupabaseService.client.storage.from(_bucket).download(decoded);
+    final token = SupabaseService.client.auth.currentSession?.accessToken;
+    if (token == null) return null;
+
+    final encodedPath =
+        decoded.split('/').map(Uri.encodeComponent).join('/');
+    final requestUrl = Uri.parse(
+      '${AppConfig.supabaseUrl}/storage/v1/object/$_bucket/$encodedPath',
+    );
+
+    final response = await http.get(requestUrl, headers: {
+      'Authorization': 'Bearer $token',
+      'apikey': AppConfig.supabaseAnonKey,
+    });
+
+    if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+      return response.bodyBytes;
+    }
+    return null;
   }
 
   /// Check if bytes start with PNG or JPEG magic bytes.

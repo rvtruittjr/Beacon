@@ -36,55 +36,11 @@ final brandLogosProvider =
   final brandId = ref.watch(currentBrandProvider);
   if (brandId == null) return [];
 
-  final client = SupabaseService.client;
-  final response = await client
+  final response = await SupabaseService.client
       .from('assets')
       .select()
       .eq('brand_id', brandId)
       .eq('file_type', 'logo');
 
-  final logos = List<Map<String, dynamic>>.from(response as List);
-
-  // The brand-assets bucket is private, so public URLs don't work.
-  // Generate signed URLs for each logo so they can be displayed.
-  return _withSignedUrls(logos, client);
+  return List<Map<String, dynamic>>.from(response as List);
 });
-
-/// Extract storage path from a public URL and create signed URLs for display.
-Future<List<Map<String, dynamic>>> _withSignedUrls(
-  List<Map<String, dynamic>> items,
-  dynamic client, {
-  String bucket = 'brand-assets',
-}) async {
-  const marker = '/object/public/brand-assets/';
-
-  // Collect paths to sign
-  final paths = <String>[];
-  final pathIndices = <int>[]; // which items need signed URLs
-
-  for (int i = 0; i < items.length; i++) {
-    final url = items[i]['file_url'] as String? ?? '';
-    final idx = url.indexOf(marker);
-    if (idx != -1) {
-      paths.add(url.substring(idx + marker.length).split('?').first);
-      pathIndices.add(i);
-    }
-  }
-
-  if (paths.isEmpty) return items;
-
-  // Batch-sign all paths in one API call
-  final signed = await SupabaseService.client.storage
-      .from(bucket)
-      .createSignedUrls(paths, 3600); // 1 hour
-
-  final result = items.map((m) => Map<String, dynamic>.from(m)).toList();
-  for (int i = 0; i < signed.length; i++) {
-    final signedUrl = signed[i].signedUrl;
-    if (signedUrl.isNotEmpty && i < pathIndices.length) {
-      result[pathIndices[i]]['file_url'] = signedUrl;
-    }
-  }
-
-  return result;
-}
