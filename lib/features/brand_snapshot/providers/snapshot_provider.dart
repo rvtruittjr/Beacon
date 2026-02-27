@@ -122,20 +122,16 @@ Future<List<Map<String, dynamic>>> _signLogoUrls(
 
   if (paths.isEmpty) return logos;
 
-  try {
-    final signed = await SupabaseService.client.storage
-        .from(bucket)
-        .createSignedUrls(paths, 3600);
+  final signed = await SupabaseService.client.storage
+      .from(bucket)
+      .createSignedUrls(paths, 3600);
 
-    final result = logos.map((m) => Map<String, dynamic>.from(m)).toList();
-    for (int i = 0; i < signed.length; i++) {
-      final signedUrl = signed[i].signedUrl;
-      if (signedUrl.isNotEmpty && i < pathIndices.length) {
-        result[pathIndices[i]]['file_url'] = signedUrl;
-      }
+  final result = logos.map((m) => Map<String, dynamic>.from(m)).toList();
+  for (int i = 0; i < signed.length; i++) {
+    final signedUrl = signed[i].signedUrl;
+    if (signedUrl.isNotEmpty && i < pathIndices.length) {
+      result[pathIndices[i]]['file_url'] = signedUrl;
     }
-    return result;
-  } catch (_) {
-    return logos;
   }
+  return result;
 }

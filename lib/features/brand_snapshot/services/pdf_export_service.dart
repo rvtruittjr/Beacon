@@ -52,12 +52,21 @@ class PdfExportService {
     return doc.save();
   }
 
-  /// Extract storage path from a public URL.
+  /// Extract storage path from a public or signed URL.
   static String? _extractPath(String url) {
-    final marker = '/object/public/$_bucket/';
-    final index = url.indexOf(marker);
-    if (index == -1) return null;
-    return url.substring(index + marker.length).split('?').first;
+    // Public: .../object/public/<bucket>/<path>
+    final publicMarker = '/object/public/$_bucket/';
+    var index = url.indexOf(publicMarker);
+    if (index != -1) {
+      return url.substring(index + publicMarker.length).split('?').first;
+    }
+    // Signed: .../object/sign/<bucket>/<path>?token=...
+    final signMarker = '/object/sign/$_bucket/';
+    index = url.indexOf(signMarker);
+    if (index != -1) {
+      return url.substring(index + signMarker.length).split('?').first;
+    }
+    return null;
   }
 
   /// Check if bytes start with PNG or JPEG magic bytes.
