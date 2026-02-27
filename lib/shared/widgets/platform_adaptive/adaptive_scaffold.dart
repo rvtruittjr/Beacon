@@ -349,6 +349,32 @@ class _MobileLayout extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Beacøn',
+                  style: AppFonts.clashDisplay(
+                    fontSize: 18,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                const Expanded(child: BrandSwitcher()),
+              ],
+            ),
+          ),
+        ),
+      ),
       body: Padding(
         padding: EdgeInsets.only(
           bottom: 100 + MediaQuery.of(context).viewPadding.bottom,
