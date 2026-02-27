@@ -2,14 +2,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/services/supabase_service.dart';
 
 /// Displays an image stored in Supabase Storage.
 ///
-/// Downloads the file bytes via the authenticated Supabase SDK, then renders
-/// with [Image.memory] (raster) or [SvgPicture.memory] (SVG).
-/// This completely bypasses CORS / CanvasKit platform-view issues on web.
+/// Uses two download strategies for maximum reliability on Flutter web:
+///   1. Direct HTTP GET on the URL (works for signed URLs)
+///   2. Supabase SDK authenticated download (works for private buckets)
 class StorageImage extends StatefulWidget {
   const StorageImage({
     super.key,
@@ -56,25 +57,40 @@ class _StorageImageState extends State<StorageImage> {
 
     setState(() { _loading = true; _hasError = false; _bytes = null; });
 
-    final path = _extractPath(widget.url);
-    if (path == null) {
-      if (mounted) setState(() { _hasError = true; _loading = false; });
-      return;
-    }
+    _isSvg = widget.url.split('?').first.toLowerCase().endsWith('.svg');
 
-    _isSvg = path.toLowerCase().endsWith('.svg');
-
+    // ── Strategy 1: Direct HTTP fetch (works for signed URLs) ──
     try {
-      final bytes = await SupabaseService.client.storage
-          .from(widget.bucket)
-          .download(path);
-      if (mounted) {
-        setState(() { _bytes = bytes; _loading = false; });
+      final response = await http.get(Uri.parse(widget.url));
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        if (mounted) {
+          setState(() { _bytes = response.bodyBytes; _loading = false; });
+        }
+        return;
       }
     } catch (_) {
-      if (mounted) {
-        setState(() { _hasError = true; _loading = false; });
+      // Direct fetch failed — try SDK download next
+    }
+
+    // ── Strategy 2: Supabase SDK authenticated download ──
+    final path = _extractPath(widget.url);
+    if (path != null) {
+      try {
+        final bytes = await SupabaseService.client.storage
+            .from(widget.bucket)
+            .download(path);
+        if (mounted && bytes.isNotEmpty) {
+          setState(() { _bytes = bytes; _loading = false; });
+          return;
+        }
+      } catch (_) {
+        // SDK download also failed
       }
+    }
+
+    // Both strategies failed
+    if (mounted) {
+      setState(() { _hasError = true; _loading = false; });
     }
   }
 

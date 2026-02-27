@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -12,23 +13,18 @@ class PdfExportService {
   static Future<Uint8List> generate(SnapshotData data) async {
     final doc = pw.Document();
 
-    // Pre-fetch logo images via Supabase SDK (bypasses CORS issues on web)
+    // Pre-fetch logo images for the PDF
     final logoImages = <pw.MemoryImage>[];
     for (final logo in data.logos) {
       final url = logo['file_url'] as String?;
       if (url == null || url.isEmpty) continue;
 
-      final path = _extractPath(url);
-      if (path == null) continue;
-
       // Skip SVG files — pw.MemoryImage only supports raster formats
-      if (path.toLowerCase().endsWith('.svg')) continue;
+      if (url.split('?').first.toLowerCase().endsWith('.svg')) continue;
 
       try {
-        final bytes = await SupabaseService.client.storage
-            .from(_bucket)
-            .download(path);
-        if (bytes.isNotEmpty && _isRasterImage(bytes)) {
+        final bytes = await _downloadImage(url);
+        if (bytes != null && bytes.isNotEmpty && _isRasterImage(bytes)) {
           logoImages.add(pw.MemoryImage(bytes));
         }
       } catch (_) {
@@ -67,6 +63,23 @@ class PdfExportService {
       return url.substring(index + signMarker.length).split('?').first;
     }
     return null;
+  }
+
+  /// Download image bytes using dual strategy: direct HTTP then SDK fallback.
+  static Future<Uint8List?> _downloadImage(String url) async {
+    // Strategy 1: Direct HTTP GET (works for signed URLs)
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        return response.bodyBytes;
+      }
+    } catch (_) {}
+
+    // Strategy 2: SDK authenticated download
+    final path = _extractPath(url);
+    if (path == null) return null;
+    final decoded = Uri.decodeFull(path);
+    return SupabaseService.client.storage.from(_bucket).download(decoded);
   }
 
   /// Check if bytes start with PNG or JPEG magic bytes.
