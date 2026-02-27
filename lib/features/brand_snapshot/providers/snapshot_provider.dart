@@ -83,6 +83,10 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
     ),
   ]);
 
+  // Convert logo public URLs to signed URLs (bucket is private)
+  final rawLogos = List<Map<String, dynamic>>.from(results[7] as List);
+  final signedLogos = await _signLogoUrls(rawLogos);
+
   return SnapshotData(
     brand: BrandModel.fromJson(results[0] as Map<String, dynamic>),
     colors: List<Map<String, dynamic>>.from(results[1] as List),
@@ -91,9 +95,47 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
     audience: results[4] as Map<String, dynamic>?,
     pillars: List<Map<String, dynamic>>.from(results[5] as List),
     topContent: List<Map<String, dynamic>>.from(results[6] as List),
-    logos: List<Map<String, dynamic>>.from(results[7] as List),
+    logos: signedLogos,
     socialAccounts: (results[8] as List)
         .map((e) => SocialAccountModel.fromJson(e as Map<String, dynamic>))
         .toList(),
   );
 });
+
+Future<List<Map<String, dynamic>>> _signLogoUrls(
+  List<Map<String, dynamic>> logos,
+) async {
+  const bucket = 'brand-assets';
+  const marker = '/object/public/$bucket/';
+
+  final paths = <String>[];
+  final pathIndices = <int>[];
+
+  for (int i = 0; i < logos.length; i++) {
+    final url = logos[i]['file_url'] as String? ?? '';
+    final idx = url.indexOf(marker);
+    if (idx != -1) {
+      paths.add(url.substring(idx + marker.length).split('?').first);
+      pathIndices.add(i);
+    }
+  }
+
+  if (paths.isEmpty) return logos;
+
+  try {
+    final signed = await SupabaseService.client.storage
+        .from(bucket)
+        .createSignedUrls(paths, 3600);
+
+    final result = logos.map((m) => Map<String, dynamic>.from(m)).toList();
+    for (int i = 0; i < signed.length; i++) {
+      final signedUrl = signed[i].signedUrl;
+      if (signedUrl.isNotEmpty && i < pathIndices.length) {
+        result[pathIndices[i]]['file_url'] = signedUrl;
+      }
+    }
+    return result;
+  } catch (_) {
+    return logos;
+  }
+}
