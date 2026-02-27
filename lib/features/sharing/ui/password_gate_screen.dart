@@ -77,10 +77,10 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
                 const SizedBox(height: AppSpacing.x2l),
 
                 // Lock icon
-                const Icon(
+                Icon(
                   LucideIcons.lock,
                   size: 48,
-                  color: AppColors.blockLime,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
@@ -132,8 +132,8 @@ class _PasswordGateScreenState extends ConsumerState<PasswordGateScreen>
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(AppRadius.md),
-                        borderSide: const BorderSide(
-                            color: AppColors.blockLime, width: 2),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary, width: 2),
                       ),
                     ),
                     onSubmitted: (_) => _submit(),

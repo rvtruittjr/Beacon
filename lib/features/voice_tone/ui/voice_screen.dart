@@ -261,10 +261,10 @@ class _VoiceScreenBodyState extends ConsumerState<_VoiceScreenBody>
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.only(left: AppSpacing.md),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
-                          color: AppColors.blockLime,
+                          color: Theme.of(context).colorScheme.primary,
                           width: 2,
                         ),
                       ),
@@ -378,8 +378,8 @@ class _VoiceScreenBodyState extends ConsumerState<_VoiceScreenBody>
                     RadarEntry(value: voice.toneSerious * t),
                     RadarEntry(value: voice.toneBold * t),
                   ],
-                  fillColor: AppColors.blockLime.withValues(alpha: 0.3),
-                  borderColor: AppColors.blockLime,
+                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  borderColor: Theme.of(context).colorScheme.primary,
                   borderWidth: 2,
                   entryRadius: 3,
                 ),
@@ -435,8 +435,8 @@ class _ToneSlider extends StatelessWidget {
                 style: const TextStyle(
                     color: AppColors.mutedDark, fontSize: 12)),
             Text(descriptor,
-                style: const TextStyle(
-                    color: AppColors.blockLime,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600)),
             Text(highLabel,
@@ -446,10 +446,10 @@ class _ToneSlider extends StatelessWidget {
         ),
         SliderTheme(
           data: SliderThemeData(
-            activeTrackColor: AppColors.blockLime,
+            activeTrackColor: Theme.of(context).colorScheme.primary,
             inactiveTrackColor: AppColors.surfaceMidDark,
-            thumbColor: AppColors.blockLime,
-            overlayColor: AppColors.blockLime.withValues(alpha: 0.15),
+            thumbColor: Theme.of(context).colorScheme.primary,
+            overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             trackHeight: 4,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
           ),

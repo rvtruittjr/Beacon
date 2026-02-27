@@ -112,7 +112,7 @@ class _ShareLinkSectionState extends ConsumerState<_ShareLinkSection> {
               style: TextStyle(color: mutedColor, fontSize: 13),
             ),
             value: widget.brand.isPublic,
-            activeColor: AppColors.blockLime,
+            activeColor: Theme.of(context).colorScheme.primary,
             contentPadding: EdgeInsets.zero,
             onChanged: (val) async {
               final brandId = ref.read(currentBrandProvider);
@@ -280,7 +280,7 @@ class _PasswordSectionState extends ConsumerState<_PasswordSection> {
             SwitchListTile(
               title: const Text('Require password'),
               value: _hasPassword,
-              activeColor: AppColors.blockLime,
+              activeColor: Theme.of(context).colorScheme.primary,
               contentPadding: EdgeInsets.zero,
               onChanged: (val) async {
                 if (!val) {
@@ -362,7 +362,7 @@ class _ExpirySection extends ConsumerWidget {
             SwitchListTile(
               title: const Text('Set expiry date'),
               value: hasExpiry,
-              activeColor: AppColors.blockLime,
+              activeColor: Theme.of(context).colorScheme.primary,
               contentPadding: EdgeInsets.zero,
               onChanged: (val) async {
                 final brandId = ref.read(currentBrandProvider);

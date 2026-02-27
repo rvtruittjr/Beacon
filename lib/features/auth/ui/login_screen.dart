@@ -129,23 +129,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Logo
               Row(
                 children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.blockLime,
-                      borderRadius: BorderRadius.all(AppRadius.lg),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'B',
-                        style: AppFonts.clashDisplay(
-                          fontSize: 28,
-                          color: AppColors.textOnLime,
+                  Builder(builder: (context) {
+                    final accent = Theme.of(context).colorScheme.primary;
+                    final onAccent = Theme.of(context).colorScheme.onPrimary;
+                    return Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.all(AppRadius.lg),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'B',
+                          style: AppFonts.clashDisplay(
+                            fontSize: 28,
+                            color: onAccent,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                   const SizedBox(width: AppSpacing.md),
                   Text(
                     'Beacøn',
@@ -231,23 +235,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.blockLime,
-                  borderRadius: BorderRadius.all(AppRadius.md),
-                ),
-                child: Center(
-                  child: Text(
-                    'B',
-                    style: AppFonts.clashDisplay(
-                      fontSize: 22,
-                      color: AppColors.textOnLime,
+              Builder(builder: (context) {
+                final accent = Theme.of(context).colorScheme.primary;
+                final onAccent = Theme.of(context).colorScheme.onPrimary;
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.all(AppRadius.md),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'B',
+                      style: AppFonts.clashDisplay(
+                        fontSize: 22,
+                        color: onAccent,
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Beacøn',
@@ -372,16 +380,17 @@ class _SplashFeature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         Container(
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.blockLime.withValues(alpha: 0.12),
+            color: accent.withValues(alpha: 0.12),
             borderRadius: BorderRadius.all(AppRadius.md),
           ),
-          child: Icon(icon, size: 20, color: AppColors.blockLime),
+          child: Icon(icon, size: 20, color: accent),
         ),
         const SizedBox(width: AppSpacing.md),
         Text(

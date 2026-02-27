@@ -114,7 +114,9 @@ class _AppButtonState extends State<AppButton> {
 
   Widget _buildIconButton(bool isDark) {
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
-    final fgColor = _isHovered ? AppColors.blockLime : mutedColor;
+    final fgColor = _isHovered
+        ? Theme.of(context).colorScheme.primary
+        : mutedColor;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -149,8 +151,8 @@ class _AppButtonState extends State<AppButton> {
 
     return switch (widget.variant) {
       AppButtonVariant.primary => (
-          AppColors.blockLime,
-          AppColors.textOnLime,
+          Theme.of(context).colorScheme.primary,
+          Theme.of(context).colorScheme.onPrimary,
           null,
         ),
       AppButtonVariant.secondary => (

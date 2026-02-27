@@ -47,7 +47,7 @@ class StepUploadLogo extends ConsumerWidget {
                     ),
                   ),
                   child: logoFile != null
-                      ? _buildPreview(logoFile)
+                      ? _buildPreview(context, logoFile)
                       : _buildPlaceholder(),
                 ),
               ),
@@ -107,7 +107,7 @@ class StepUploadLogo extends ConsumerWidget {
     );
   }
 
-  Widget _buildPreview(PlatformFile file) {
+  Widget _buildPreview(BuildContext context, PlatformFile file) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -117,14 +117,14 @@ class StepUploadLogo extends ConsumerWidget {
             width: 80,
             height: 80,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(
+            errorBuilder: (_, __, ___) => Icon(
               Icons.image,
               size: 48,
-              color: AppColors.blockLime,
+              color: Theme.of(context).colorScheme.primary,
             ),
           )
         else
-          const Icon(Icons.check_circle, size: 48, color: AppColors.blockLime),
+          Icon(Icons.check_circle, size: 48, color: Theme.of(context).colorScheme.primary),
         const SizedBox(height: AppSpacing.sm),
         Text(
           file.name,

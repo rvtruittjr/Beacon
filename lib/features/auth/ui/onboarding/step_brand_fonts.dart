@@ -257,7 +257,7 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                       onPressed:
                           _familyController.text.trim().isNotEmpty ? _addFont : null,
                       icon: const Icon(Icons.add_circle_outline),
-                      color: AppColors.blockLime,
+                      color: Theme.of(context).colorScheme.primary,
                       disabledColor: AppColors.mutedDark,
                       iconSize: 28,
                     ),
@@ -351,7 +351,7 @@ class _StepBrandFontsState extends ConsumerState<StepBrandFonts> {
                                           font.label!,
                                           style: AppFonts.inter(
                                             fontSize: 12,
-                                            color: AppColors.blockLime,
+                                            color: Theme.of(context).colorScheme.primary,
                                           ),
                                         ),
                                       ),

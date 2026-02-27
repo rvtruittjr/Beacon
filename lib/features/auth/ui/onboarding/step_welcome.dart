@@ -50,9 +50,9 @@ class StepWelcome extends ConsumerWidget {
                   borderRadius: BorderRadius.all(AppRadius.full),
                   border: Border.all(color: AppColors.borderDark),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.hexagon_outlined,
-                  color: AppColors.blockLime,
+                  color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
               ),

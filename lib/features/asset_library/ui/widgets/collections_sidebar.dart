@@ -55,14 +55,14 @@ class CollectionsSidebar extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xs),
           // Collection list
           collectionsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
+            loading: () => Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.blockLime,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
@@ -243,9 +243,9 @@ class _CollectionItem extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           border: isActive
-              ? const Border(
+              ? Border(
                   left: BorderSide(
-                    color: AppColors.blockLime,
+                    color: Theme.of(context).colorScheme.primary,
                     width: 3,
                   ),
                 )

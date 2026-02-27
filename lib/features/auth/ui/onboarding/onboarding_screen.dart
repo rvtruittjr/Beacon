@@ -99,7 +99,7 @@ class _ProgressDots extends StatelessWidget {
           height: 8,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.blockLime : AppColors.mutedDark,
+            color: isActive ? Theme.of(context).colorScheme.primary : AppColors.mutedDark,
             borderRadius: BorderRadius.all(AppRadius.full),
           ),
         );

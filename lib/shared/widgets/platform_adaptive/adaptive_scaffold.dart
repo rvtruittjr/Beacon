@@ -96,23 +96,27 @@ class _DesktopLayout extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.blockLime,
-                            borderRadius: BorderRadius.all(AppRadius.sm),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'B',
-                              style: AppFonts.clashDisplay(
-                                fontSize: 18,
-                                color: AppColors.textOnLime,
+                        Builder(builder: (context) {
+                          final accent = Theme.of(context).colorScheme.primary;
+                          final onAccent = Theme.of(context).colorScheme.onPrimary;
+                          return Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: accent,
+                              borderRadius: BorderRadius.all(AppRadius.sm),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'B',
+                                style: AppFonts.clashDisplay(
+                                  fontSize: 18,
+                                  color: onAccent,
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                          );
+                        }),
                         const SizedBox(width: AppSpacing.sm),
                         Text(
                           'Beacøn',
@@ -193,6 +197,9 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isActive = currentPath == widget.item.path;
 
+    final accent = Theme.of(context).colorScheme.primary;
+    final onAccent = Theme.of(context).colorScheme.onPrimary;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -205,7 +212,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.blockLime
+                ? accent
                 : _isHovered
                     ? AppColors.sidebarSurface
                     : Colors.transparent,
@@ -217,7 +224,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                 widget.item.icon,
                 size: 20,
                 color: isActive
-                    ? AppColors.textOnLime
+                    ? onAccent
                     : _isHovered
                         ? AppColors.sidebarText
                         : AppColors.sidebarMuted,
@@ -230,7 +237,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                     fontSize: 14,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     color: isActive
-                        ? AppColors.textOnLime
+                        ? onAccent
                         : _isHovered
                             ? AppColors.sidebarText
                             : AppColors.sidebarMuted,
@@ -274,13 +281,13 @@ class _SidebarUserCard extends ConsumerWidget {
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.blockLime,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             child: Text(
               displayName.isNotEmpty
                   ? displayName[0].toUpperCase()
                   : '?',
-              style: const TextStyle(
-                color: AppColors.textOnLime,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
@@ -390,7 +397,7 @@ class _MobileLayout extends StatelessWidget {
                           item.icon,
                           size: 22,
                           color: isActive
-                              ? AppColors.blockLime
+                              ? Theme.of(context).colorScheme.primary
                               : AppColors.sidebarMuted,
                         ),
                         const SizedBox(height: 2),
@@ -402,7 +409,7 @@ class _MobileLayout extends StatelessWidget {
                                 ? FontWeight.w600
                                 : FontWeight.w400,
                             color: isActive
-                                ? AppColors.blockLime
+                                ? Theme.of(context).colorScheme.primary
                                 : AppColors.sidebarMuted,
                           ),
                         ),
@@ -464,7 +471,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                     ),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? AppColors.blockLime
+                          ? Theme.of(context).colorScheme.primary
                           : Colors.transparent,
                       borderRadius: BorderRadius.all(AppRadius.md),
                     ),
@@ -474,7 +481,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                           item.icon,
                           size: 20,
                           color: isActive
-                              ? AppColors.textOnLime
+                              ? Theme.of(context).colorScheme.onPrimary
                               : AppColors.sidebarMuted,
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -485,7 +492,7 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                             fontWeight:
                                 isActive ? FontWeight.w600 : FontWeight.w500,
                             color: isActive
-                                ? AppColors.textOnLime
+                                ? Theme.of(context).colorScheme.onPrimary
                                 : AppColors.sidebarText,
                           ),
                         ),

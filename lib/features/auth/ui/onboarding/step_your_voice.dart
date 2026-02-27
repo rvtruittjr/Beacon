@@ -142,8 +142,8 @@ class _ToneSlider extends StatelessWidget {
                 style: const TextStyle(
                     color: AppColors.mutedDark, fontSize: 12)),
             Text(descriptor,
-                style: const TextStyle(
-                    color: AppColors.blockLime,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
             Text(highLabel,
@@ -153,10 +153,10 @@ class _ToneSlider extends StatelessWidget {
         ),
         SliderTheme(
           data: SliderThemeData(
-            activeTrackColor: AppColors.blockLime,
+            activeTrackColor: Theme.of(context).colorScheme.primary,
             inactiveTrackColor: AppColors.surfaceMidDark,
-            thumbColor: AppColors.blockLime,
-            overlayColor: AppColors.blockLime.withValues(alpha: 0.15),
+            thumbColor: Theme.of(context).colorScheme.primary,
+            overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             trackHeight: 4,
           ),
           child: Slider(
@@ -220,8 +220,8 @@ class _ToneRadarChart extends StatelessWidget {
               RadarEntry(value: serious.toDouble()),
               RadarEntry(value: bold.toDouble()),
             ],
-            fillColor: AppColors.blockLime.withValues(alpha: 0.2),
-            borderColor: AppColors.blockLime,
+            fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            borderColor: Theme.of(context).colorScheme.primary,
             borderWidth: 2,
             entryRadius: 3,
           ),

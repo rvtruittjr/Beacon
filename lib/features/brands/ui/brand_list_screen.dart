@@ -119,22 +119,22 @@ class _NewBrandCardState extends State<_NewBrandCard> {
             borderRadius: BorderRadius.all(AppRadius.md),
             border: Border.all(
               color: _isHovered
-                  ? AppColors.blockLime.withValues(alpha: 0.6)
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
                   : widget.borderColor,
               width: 2,
               strokeAlign: BorderSide.strokeAlignInside,
             ),
           ),
-          child: const Center(
+          child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.plus, size: 32, color: AppColors.blockLime),
-                SizedBox(height: AppSpacing.sm),
+                Icon(LucideIcons.plus, size: 32, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   'New brand',
                   style: TextStyle(
-                    color: AppColors.blockLime,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),

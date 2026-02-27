@@ -6,18 +6,25 @@ import 'design_tokens.dart';
 class AppTheme {
   AppTheme._();
 
+  static Color _textOnColor(Color color) {
+    return color.computeLuminance() > 0.4
+        ? const Color(0xFF1A1A2E)
+        : const Color(0xFFFFFFFF);
+  }
+
   // ── Dark Theme ──────────────────────────────────────────────
-  static ThemeData dark() {
+  static ThemeData dark({Color accent = AppColors.blockLime}) {
     final base = ThemeData.dark(useMaterial3: true);
     final textTheme = GoogleFonts.interTextTheme(base.textTheme);
+    final onAccent = _textOnColor(accent);
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.backgroundDark,
       colorScheme: ColorScheme.dark(
         surface: AppColors.surfaceDark,
         onSurface: AppColors.textPrimaryDark,
-        primary: AppColors.blockLime,
-        onPrimary: AppColors.textOnLime,
+        primary: accent,
+        onPrimary: onAccent,
         secondary: AppColors.blockViolet,
         onSecondary: AppColors.textOnViolet,
         error: AppColors.error,
@@ -54,7 +61,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.blockLime, width: 2),
+          borderSide: BorderSide(color: accent, width: 2),
         ),
         hintStyle: const TextStyle(color: AppColors.mutedDark, fontSize: 14),
         labelStyle: const TextStyle(color: AppColors.mutedDark, fontSize: 14),
@@ -71,8 +78,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.blockLime,
-          foregroundColor: AppColors.textOnLime,
+          backgroundColor: accent,
+          foregroundColor: onAccent,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(AppRadius.full),
@@ -98,7 +105,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.blockLime,
+          foregroundColor: accent,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
@@ -139,17 +146,18 @@ class AppTheme {
   }
 
   // ── Light Theme ─────────────────────────────────────────────
-  static ThemeData light() {
+  static ThemeData light({Color accent = AppColors.blockLime}) {
     final base = ThemeData.light(useMaterial3: true);
     final textTheme = GoogleFonts.interTextTheme(base.textTheme);
+    final onAccent = _textOnColor(accent);
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.backgroundLight,
       colorScheme: ColorScheme.light(
         surface: AppColors.surfaceLight,
         onSurface: AppColors.textPrimaryLight,
-        primary: AppColors.blockLime,
-        onPrimary: AppColors.textOnLime,
+        primary: accent,
+        onPrimary: onAccent,
         secondary: AppColors.blockViolet,
         onSecondary: AppColors.textOnViolet,
         error: AppColors.error,
@@ -186,7 +194,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.blockLime, width: 2),
+          borderSide: BorderSide(color: accent, width: 2),
         ),
         hintStyle: const TextStyle(color: AppColors.mutedLight, fontSize: 14),
         labelStyle: const TextStyle(color: AppColors.mutedLight, fontSize: 14),
@@ -203,8 +211,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.blockLime,
-          foregroundColor: AppColors.textOnLime,
+          backgroundColor: accent,
+          foregroundColor: onAccent,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(AppRadius.full),

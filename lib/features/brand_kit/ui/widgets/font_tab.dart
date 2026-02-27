@@ -631,7 +631,7 @@ class _SourceToggle extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.blockLime
+              ? Theme.of(context).colorScheme.primary
               : (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
           borderRadius: BorderRadius.all(AppRadius.full),
         ),
@@ -641,7 +641,7 @@ class _SourceToggle extends StatelessWidget {
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             color: isSelected
-                ? AppColors.textOnLime
+                ? Theme.of(context).colorScheme.onPrimary
                 : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
           ),
         ),

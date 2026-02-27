@@ -137,14 +137,14 @@ class _ProfileSectionState extends ConsumerState<_ProfileSection> {
                         right: 0,
                         child: Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: AppColors.blockLime,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.camera,
                             size: 14,
-                            color: AppColors.textOnLime,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ),
@@ -262,6 +262,8 @@ class _AppearanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final currentMode = ref.watch(themeModeProvider);
 
     return AppCard(
@@ -276,8 +278,7 @@ class _AppearanceSection extends ConsumerWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color:
-                  isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              color: textColor,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -287,6 +288,17 @@ class _AppearanceSection extends ConsumerWidget {
               ref.read(themeModeProvider.notifier).setMode(mode);
             },
           ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Accent Color',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const _AccentColorPicker(),
         ],
       ),
     );
@@ -371,6 +383,167 @@ class _ThemePillSelector extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Accent Color Picker ─────────────────────────────────────────
+
+class _AccentColorPicker extends ConsumerStatefulWidget {
+  const _AccentColorPicker();
+
+  static const _presets = <(String, Color)>[
+    ('Lime', Color(0xFFC8F135)),
+    ('Violet', Color(0xFF6C63FF)),
+    ('Blue', Color(0xFF3B82F6)),
+    ('Teal', Color(0xFF14B8A6)),
+    ('Coral', Color(0xFFFF6B6B)),
+    ('Orange', Color(0xFFF97316)),
+    ('Pink', Color(0xFFEC4899)),
+    ('Yellow', Color(0xFFFFD166)),
+  ];
+
+  @override
+  ConsumerState<_AccentColorPicker> createState() => _AccentColorPickerState();
+}
+
+class _AccentColorPickerState extends ConsumerState<_AccentColorPicker> {
+  late TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hexController = TextEditingController(
+      text: _colorToHex(ref.read(accentColorProvider)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  String _colorToHex(Color color) {
+    final hex = color.value.toRadixString(16).padLeft(8, '0').substring(2);
+    return '#${hex.toUpperCase()}';
+  }
+
+  void _onPresetTap(Color color) {
+    ref.read(accentColorProvider.notifier).setColor(color);
+    _hexController.text = _colorToHex(color);
+  }
+
+  void _onHexSubmit(String value) {
+    final hex = value.trim().replaceFirst('#', '');
+    if (hex.length != 6) return;
+    try {
+      final color = Color(int.parse('FF$hex', radix: 16));
+      ref.read(accentColorProvider.notifier).setColor(color);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = ref.watch(accentColorProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: _AccentColorPicker._presets.map((preset) {
+            final (name, color) = preset;
+            final isSelected = accent.value == color.value;
+            return GestureDetector(
+              onTap: () => _onPresetTap(color),
+              child: Tooltip(
+                message: name,
+                child: AnimatedContainer(
+                  duration: AppDurations.fast,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: isSelected
+                        ? Border.all(
+                            color: isDark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimaryLight,
+                            width: 2,
+                          )
+                        : Border.all(
+                            color: mutedColor.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                  ),
+                  child: isSelected
+                      ? Icon(
+                          Icons.check,
+                          size: 16,
+                          color: AccentColorNotifier.textOnColor(color),
+                        )
+                      : null,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: 140,
+          child: TextField(
+            controller: _hexController,
+            onSubmitted: _onHexSubmit,
+            style: TextStyle(
+              fontSize: 13,
+              fontFamily: 'monospace',
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimaryLight,
+            ),
+            decoration: InputDecoration(
+              hintText: '#C8F135',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              prefixIcon: Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.only(left: 8, right: 4),
+                decoration: BoxDecoration(
+                  color: accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              prefixIconConstraints:
+                  const BoxConstraints(maxWidth: 36, maxHeight: 20),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (accent.value != AppColors.blockLime.value)
+          GestureDetector(
+            onTap: () {
+              ref.read(accentColorProvider.notifier).reset();
+              _hexController.text = _colorToHex(AppColors.blockLime);
+            },
+            child: Text(
+              'Reset to default',
+              style: TextStyle(
+                fontSize: 12,
+                color: mutedColor,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

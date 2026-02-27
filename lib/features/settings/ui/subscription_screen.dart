@@ -186,15 +186,15 @@ class _IntervalToggle extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.blockLime.withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.all(AppRadius.full),
                 ),
-                child: const Text(
+                child: Text(
                   'Save 31%',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.blockLime,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -377,7 +377,7 @@ class _ProPlanCardState extends ConsumerState<_ProPlanCard> {
           if (widget.interval == 'year')
             Text(
               'That\'s \$8.25/month',
-              style: TextStyle(fontSize: 12, color: AppColors.blockLime),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary),
             ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -466,15 +466,15 @@ class _CurrentPlanBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.blockLime.withValues(alpha: 0.15),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.all(AppRadius.full),
       ),
-      child: const Text(
+      child: Text(
         'Current plan',
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.blockLime,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );

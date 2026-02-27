@@ -173,7 +173,7 @@ class _StepDoneState extends ConsumerState<StepDone> {
     final colors = [
       AppColors.blockViolet,
       AppColors.blockCoral,
-      AppColors.blockLime,
+      Theme.of(context).colorScheme.primary,
       AppColors.backgroundDark,
     ];
 
@@ -288,7 +288,7 @@ class _BrandPreviewCard extends StatelessWidget {
                           font.label!,
                           style: AppFonts.inter(
                             fontSize: 11,
-                            color: AppColors.blockLime,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ],

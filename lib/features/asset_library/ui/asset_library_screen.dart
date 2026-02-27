@@ -251,7 +251,7 @@ class _AssetLibraryScreenState extends ConsumerState<AssetLibraryScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.backgroundDark.withValues(alpha: 0.8),
                     border: Border.all(
-                      color: AppColors.blockLime,
+                      color: Theme.of(context).colorScheme.primary,
                       width: 2,
                       strokeAlign: BorderSide.strokeAlignInside,
                     ),
@@ -262,7 +262,7 @@ class _AssetLibraryScreenState extends ConsumerState<AssetLibraryScreen> {
                       'Drop to upload',
                       style: AppFonts.clashDisplay(
                         fontSize: 24,
-                        color: AppColors.blockLime,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -419,7 +419,7 @@ class _FilterPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.blockLime
+                ? Theme.of(context).colorScheme.primary
                 : (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
             borderRadius: BorderRadius.all(AppRadius.full),
           ),
@@ -427,7 +427,7 @@ class _FilterPill extends StatelessWidget {
             label,
             style: TextStyle(
               color: isActive
-                  ? AppColors.textOnLime
+                  ? Theme.of(context).colorScheme.onPrimary
                   : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -459,7 +459,7 @@ class _CollectionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.blockLime : Colors.transparent,
+            color: isActive ? Theme.of(context).colorScheme.primary : Colors.transparent,
             borderRadius: BorderRadius.all(AppRadius.full),
             border: isActive
                 ? null
@@ -473,7 +473,7 @@ class _CollectionChip extends StatelessWidget {
             label,
             style: TextStyle(
               color: isActive
-                  ? AppColors.textOnLime
+                  ? Theme.of(context).colorScheme.onPrimary
                   : (Theme.of(context).brightness == Brightness.dark
                       ? AppColors.mutedDark
                       : AppColors.mutedLight),
