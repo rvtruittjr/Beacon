@@ -20,6 +20,7 @@ import 'widgets/brand_voice_section.dart';
 import 'widgets/audience_section.dart';
 import 'widgets/content_pillars_section.dart';
 import 'widgets/top_content_section.dart';
+import 'widgets/social_accounts_snapshot.dart';
 import 'widgets/brand_health_card.dart';
 import '../models/brand_health_score.dart';
 import '../services/pdf_export_service.dart';
@@ -72,6 +73,7 @@ class SnapshotScreen extends ConsumerWidget {
       LogoVariationsSection(logos: data.logos),
       BrandVoiceSection(voice: data.voice),
       AudienceSection(audience: data.audience),
+      SocialAccountsSnapshot(accounts: data.socialAccounts),
       ContentPillarsSection(pillars: data.pillars),
       TopContentSection(items: data.topContent),
     ];
@@ -208,7 +210,14 @@ class SnapshotScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Row 4: Pillars (1/3) + Top Content (2/3)
+              // Row 4: Social Accounts (full width)
+              animateRow(
+                SocialAccountsSnapshot(accounts: data.socialAccounts),
+                4,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 5: Pillars (1/3) + Top Content (2/3)
               animateRow(
                 IntrinsicHeight(
                   child: Row(
@@ -226,7 +235,7 @@ class SnapshotScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                4,
+                5,
               ),
             ],
           ),

@@ -76,10 +76,17 @@ class BrandHealthScore {
           isComplete: data.pillars.isNotEmpty,
         ),
         BrandHealthSection(
+          label: 'Social Accounts',
+          routePath: '/app/audience',
+          icon: LucideIcons.share2,
+          weight: 5,
+          isComplete: data.socialAccounts.isNotEmpty,
+        ),
+        BrandHealthSection(
           label: 'Content Archive',
           routePath: '/app/archive',
           icon: LucideIcons.archive,
-          weight: 10,
+          weight: 5,
           isComplete: data.topContent.isNotEmpty,
         ),
       ],

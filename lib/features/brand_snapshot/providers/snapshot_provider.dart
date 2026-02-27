@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../audience/models/social_account_model.dart';
 import '../../brands/models/brand_model.dart';
 
 class SnapshotData {
@@ -13,6 +14,7 @@ class SnapshotData {
   final List<Map<String, dynamic>> pillars;
   final List<Map<String, dynamic>> topContent;
   final List<Map<String, dynamic>> logos;
+  final List<SocialAccountModel> socialAccounts;
 
   const SnapshotData({
     required this.brand,
@@ -23,6 +25,7 @@ class SnapshotData {
     required this.pillars,
     required this.topContent,
     required this.logos,
+    required this.socialAccounts,
   });
 }
 
@@ -73,6 +76,11 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
       client.from('assets').select().eq('brand_id', brandId).eq('file_type', 'logo'),
       <dynamic>[],
     ),
+    // 8 – social accounts
+    safeQuery(
+      client.from('social_accounts').select().eq('brand_id', brandId).order('created_at'),
+      <dynamic>[],
+    ),
   ]);
 
   return SnapshotData(
@@ -84,5 +92,8 @@ final snapshotProvider = FutureProvider.autoDispose<SnapshotData>((ref) async {
     pillars: List<Map<String, dynamic>>.from(results[5] as List),
     topContent: List<Map<String, dynamic>>.from(results[6] as List),
     logos: List<Map<String, dynamic>>.from(results[7] as List),
+    socialAccounts: (results[8] as List)
+        .map((e) => SocialAccountModel.fromJson(e as Map<String, dynamic>))
+        .toList(),
   );
 });
