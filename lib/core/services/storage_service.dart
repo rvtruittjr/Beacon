@@ -73,6 +73,60 @@ class StorageService {
     }
   }
 
+  /// Convert a public URL back to a signed URL.
+  /// Public URLs have the format: .../object/public/<bucket>/<path>
+  /// Returns the original URL if it can't be parsed.
+  static Future<String> toSignedUrl(String publicUrl, {
+    String bucket = 'brand-assets',
+    Duration expiry = const Duration(hours: 1),
+  }) async {
+    final marker = '/object/public/$bucket/';
+    final index = publicUrl.indexOf(marker);
+    if (index == -1) return publicUrl;
+    final path = publicUrl.substring(index + marker.length).split('?').first;
+    try {
+      return await _storage.from(bucket).createSignedUrl(path, expiry.inSeconds);
+    } catch (_) {
+      return publicUrl; // fallback to public URL
+    }
+  }
+
+  /// Batch-convert multiple public URLs to signed URLs.
+  static Future<List<String>> toSignedUrls(List<String> publicUrls, {
+    String bucket = 'brand-assets',
+    Duration expiry = const Duration(hours: 1),
+  }) async {
+    final marker = '/object/public/$bucket/';
+    final paths = <String>[];
+    final indexMap = <int, int>{}; // maps paths index → publicUrls index
+
+    for (int i = 0; i < publicUrls.length; i++) {
+      final url = publicUrls[i];
+      final idx = url.indexOf(marker);
+      if (idx != -1) {
+        indexMap[paths.length] = i;
+        paths.add(url.substring(idx + marker.length).split('?').first);
+      }
+    }
+
+    if (paths.isEmpty) return publicUrls;
+
+    try {
+      final signed = await _storage.from(bucket).createSignedUrls(paths, expiry.inSeconds);
+      final result = List<String>.from(publicUrls);
+      for (int i = 0; i < signed.length; i++) {
+        final origIdx = indexMap[i];
+        final signedUrl = signed[i].signedUrl;
+        if (origIdx != null && signedUrl.isNotEmpty) {
+          result[origIdx] = signedUrl;
+        }
+      }
+      return result;
+    } catch (_) {
+      return publicUrls;
+    }
+  }
+
   static Future<String> _upload(
     String bucket,
     String path,
