@@ -149,6 +149,23 @@ class AssetLibraryRepository {
         'file_size_bytes': file.size,
       }).select().single();
 
+      // If it's a font, also add to brand_fonts so it appears in Brand Kit
+      if (fileType == 'font') {
+        final family = name.replaceAll(RegExp(r'\.(ttf|otf|woff2?|TTF|OTF|WOFF2?)$'), '');
+        try {
+          await client.from('brand_fonts').insert({
+            'brand_id': brandId,
+            'label': family,
+            'family': family,
+            'weight': 400,
+            'source': 'upload',
+            'url': url,
+          });
+        } catch (_) {
+          // Non-critical — font still exists in assets table
+        }
+      }
+
       return AssetModel.fromJson(response);
     } catch (e, stack) {
       if (e is app.AppException) rethrow;
@@ -181,7 +198,26 @@ class AssetLibraryRepository {
 
   Future<void> deleteAsset(String id) async {
     try {
-      await SupabaseService.client.from('assets').delete().eq('id', id);
+      final client = SupabaseService.client;
+
+      // Fetch asset first to check if it's a font and get the URL
+      final row = await client
+          .from('assets')
+          .select('file_type, file_url')
+          .eq('id', id)
+          .maybeSingle();
+
+      await client.from('assets').delete().eq('id', id);
+
+      // If the deleted asset was a font, also remove from brand_fonts
+      if (row != null && row['file_type'] == 'font' && row['file_url'] != null) {
+        try {
+          await client
+              .from('brand_fonts')
+              .delete()
+              .eq('url', row['file_url'] as String);
+        } catch (_) {}
+      }
     } catch (e, stack) {
       ErrorHandler.throwHandled(e, stack);
     }
