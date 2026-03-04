@@ -23,6 +23,7 @@ import 'widgets/content_pillars_section.dart';
 import 'widgets/top_content_section.dart';
 import 'widgets/social_accounts_snapshot.dart';
 import 'widgets/brand_health_card.dart';
+import 'widgets/changelog_section.dart';
 import '../models/brand_health_score.dart';
 import '../services/pdf_export_service.dart';
 import '../../brand_kit/services/asset_pack_service.dart';
@@ -79,6 +80,7 @@ class SnapshotScreen extends ConsumerWidget {
       SocialAccountsSnapshot(accounts: data.socialAccounts),
       ContentPillarsSection(pillars: data.pillars),
       TopContentSection(items: data.topContent),
+      const ChangelogSection(),
     ];
 
     return SingleChildScrollView(
@@ -239,6 +241,13 @@ class SnapshotScreen extends ConsumerWidget {
                   ),
                 ),
                 5,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Row 6: Changelog (full width)
+              animateRow(
+                const ChangelogSection(),
+                6,
               ),
             ],
           ),

@@ -138,19 +138,43 @@ class _InspirationBoardScreenState
     final brandId = ref.read(currentBrandProvider);
     if (brandId == null) return;
 
-    final repo = ref.read(inspirationRepositoryProvider);
-    final item = await repo.addItem(
-      brandId: brandId,
-      imageUrl: imageUrl,
-      posX: 100 + (ref.read(boardStateProvider).length * 30.0),
-      posY: 100 + (ref.read(boardStateProvider).length * 30.0),
-    );
-    ref.read(boardStateProvider.notifier).addItem(item);
+    try {
+      final repo = ref.read(inspirationRepositoryProvider);
+      final item = await repo.addItem(
+        brandId: brandId,
+        imageUrl: imageUrl,
+        posX: 100 + (ref.read(boardStateProvider).length * 30.0),
+        posY: 100 + (ref.read(boardStateProvider).length * 30.0),
+      );
+      ref.read(boardStateProvider.notifier).addItem(item);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add item: $e'),
+            behavior: SnackBarBehavior.floating,
+            width: 320,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _deleteItem(String id) async {
     ref.read(boardStateProvider.notifier).removeItem(id);
-    await ref.read(inspirationRepositoryProvider).deleteItem(id);
+    try {
+      await ref.read(inspirationRepositoryProvider).deleteItem(id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete item: $e'),
+            behavior: SnackBarBehavior.floating,
+            width: 320,
+          ),
+        );
+      }
+    }
   }
 
   void _persistPosition(String id) {

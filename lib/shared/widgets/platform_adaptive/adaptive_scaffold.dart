@@ -9,27 +9,47 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/providers/app_providers.dart';
 import 'brand_switcher.dart';
 
-class _NavItem {
+// ── Nav models ─────────────────────────────────────────────
+
+sealed class _SidebarEntry {
+  const _SidebarEntry();
+}
+
+class _NavItem extends _SidebarEntry {
   final String label;
   final IconData icon;
   final String path;
   const _NavItem(this.label, this.icon, this.path);
 }
 
-const _allNavItems = [
+class _NavGroup extends _SidebarEntry {
+  final String label;
+  final IconData icon;
+  final List<_NavItem> children;
+  const _NavGroup(this.label, this.icon, this.children);
+}
+
+// ── Sidebar entries (desktop) ──────────────────────────────
+
+const _sidebarEntries = <_SidebarEntry>[
   _NavItem('Snapshot', LucideIcons.home, '/app/snapshot'),
-  _NavItem('Brand Kit', LucideIcons.palette, '/app/brand-kit'),
-  _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
-  _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
-  _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
-  _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
-  _NavItem('Audience', LucideIcons.users, '/app/audience'),
-  _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
-  _NavItem('Changelog', LucideIcons.history, '/app/changelog'),
+  _NavGroup('Brand Assets', LucideIcons.palette, [
+    _NavItem('Brand Kit', LucideIcons.palette, '/app/brand-kit'),
+    _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
+    _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
+    _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
+  ]),
+  _NavGroup('Strategy', LucideIcons.compass, [
+    _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
+    _NavItem('Audience', LucideIcons.users, '/app/audience'),
+    _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
+  ]),
   _NavItem('Archive', LucideIcons.archive, '/app/archive'),
   _NavItem('Sharing', LucideIcons.link, '/app/sharing'),
   _NavItem('Settings', LucideIcons.settings, '/app/settings'),
 ];
+
+// ── Mobile nav ─────────────────────────────────────────────
 
 const _mobileNavItems = [
   _NavItem('Snapshot', LucideIcons.home, '/app/snapshot'),
@@ -39,16 +59,30 @@ const _mobileNavItems = [
   _NavItem('More', LucideIcons.menu, ''),
 ];
 
-const _moreSheetItems = [
-  _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
-  _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
-  _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
-  _NavItem('Audience', LucideIcons.users, '/app/audience'),
-  _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
-  _NavItem('Changelog', LucideIcons.history, '/app/changelog'),
-  _NavItem('Sharing', LucideIcons.link, '/app/sharing'),
-  _NavItem('Settings', LucideIcons.settings, '/app/settings'),
+// Grouped items for the mobile "More" bottom sheet
+const _moreSheetGroups = <(String?, List<_NavItem>)>[
+  ('Brand Assets', [
+    _NavItem('Brand Kit', LucideIcons.palette, '/app/brand-kit'),
+    _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
+    _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
+    _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
+  ]),
+  ('Strategy', [
+    _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
+    _NavItem('Audience', LucideIcons.users, '/app/audience'),
+    _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
+  ]),
+  (null, [
+    _NavItem('Sharing', LucideIcons.link, '/app/sharing'),
+    _NavItem('Settings', LucideIcons.settings, '/app/settings'),
+  ]),
 ];
+
+// Flat list for "is this a more-sheet path?" checks
+List<_NavItem> get _allMoreSheetItems =>
+    _moreSheetGroups.expand((g) => g.$2).toList();
+
+// ── Adaptive Scaffold ──────────────────────────────────────
 
 class AdaptiveScaffold extends ConsumerWidget {
   const AdaptiveScaffold({super.key, required this.child});
@@ -146,14 +180,17 @@ class _DesktopLayout extends ConsumerWidget {
 
                   // Nav items
                   Expanded(
-                    child: Padding(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm,
                       ),
                       child: Column(
-                        children: _allNavItems
-                            .map((item) => _SidebarNavItem(item: item))
-                            .toList(),
+                        children: _sidebarEntries.map((entry) {
+                          return switch (entry) {
+                            _NavItem item => _SidebarNavItem(item: item),
+                            _NavGroup group => _SidebarNavGroup(group: group),
+                          };
+                        }).toList(),
                       ),
                     ),
                   ),
@@ -190,8 +227,9 @@ class _DesktopLayout extends ConsumerWidget {
 // ── Sidebar nav item ────────────────────────────────────────
 
 class _SidebarNavItem extends StatefulWidget {
-  const _SidebarNavItem({required this.item});
+  const _SidebarNavItem({required this.item, this.indent = false});
   final _NavItem item;
+  final bool indent;
 
   @override
   State<_SidebarNavItem> createState() => _SidebarNavItemState();
@@ -215,8 +253,11 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
         onTap: () => context.go(widget.item.path),
         child: AnimatedContainer(
           duration: AppDurations.fast,
-          height: 44,
-          margin: const EdgeInsets.only(bottom: 4),
+          height: widget.indent ? 38 : 44,
+          margin: EdgeInsets.only(
+            bottom: 2,
+            left: widget.indent ? AppSpacing.lg : 0,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: isActive
@@ -230,7 +271,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
             children: [
               Icon(
                 widget.item.icon,
-                size: 20,
+                size: widget.indent ? 16 : 20,
                 color: isActive
                     ? onAccent
                     : _isHovered
@@ -242,7 +283,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                 child: Text(
                   widget.item.label,
                   style: AppFonts.inter(
-                    fontSize: 14,
+                    fontSize: widget.indent ? 13 : 14,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     color: isActive
                         ? onAccent
@@ -256,6 +297,127 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Sidebar nav group (collapsible) ─────────────────────────
+
+class _SidebarNavGroup extends StatefulWidget {
+  const _SidebarNavGroup({required this.group});
+  final _NavGroup group;
+
+  @override
+  State<_SidebarNavGroup> createState() => _SidebarNavGroupState();
+}
+
+class _SidebarNavGroupState extends State<_SidebarNavGroup> {
+  bool _isHovered = false;
+  bool _manuallyToggled = false;
+  bool _manualExpanded = false;
+
+  bool _hasActiveChild(String currentPath) {
+    return widget.group.children.any((item) => currentPath == item.path);
+  }
+
+  bool _isExpanded(String currentPath) {
+    if (_manuallyToggled) return _manualExpanded;
+    return _hasActiveChild(currentPath);
+  }
+
+  void _toggle(String currentPath) {
+    setState(() {
+      _manuallyToggled = true;
+      _manualExpanded = !_isExpanded(currentPath);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentPath = GoRouterState.of(context).matchedLocation;
+    final expanded = _isExpanded(currentPath);
+    final hasActive = _hasActiveChild(currentPath);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Group header
+        MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: () => _toggle(currentPath),
+            child: AnimatedContainer(
+              duration: AppDurations.fast,
+              height: 44,
+              margin: const EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: _isHovered
+                    ? context.beacon.sidebarSurface
+                    : Colors.transparent,
+                borderRadius: BorderRadius.all(AppRadius.md),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    widget.group.icon,
+                    size: 20,
+                    color: hasActive
+                        ? Theme.of(context).colorScheme.primary
+                        : _isHovered
+                            ? context.beacon.sidebarText
+                            : context.beacon.sidebarMuted,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      widget.group.label,
+                      style: AppFonts.inter(
+                        fontSize: 14,
+                        fontWeight:
+                            hasActive ? FontWeight.w600 : FontWeight.w500,
+                        color: hasActive
+                            ? Theme.of(context).colorScheme.primary
+                            : _isHovered
+                                ? context.beacon.sidebarText
+                                : context.beacon.sidebarMuted,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: expanded ? 0.25 : 0,
+                    duration: AppDurations.fast,
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 14,
+                      color: _isHovered
+                          ? context.beacon.sidebarText
+                          : context.beacon.sidebarMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Children
+        AnimatedSize(
+          duration: AppDurations.normal,
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: expanded
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: widget.group.children
+                      .map((item) =>
+                          _SidebarNavItem(item: item, indent: true))
+                      .toList(),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }
@@ -349,7 +511,7 @@ class _MobileLayout extends StatelessWidget {
     if (currentIndex < 0) {
       // Check if current path is a "More" screen
       final isMoreScreen =
-          _moreSheetItems.any((item) => currentPath == item.path);
+          _allMoreSheetItems.any((item) => currentPath == item.path);
       currentIndex = isMoreScreen ? _mobileNavItems.length - 1 : 0;
     }
 
@@ -487,53 +649,77 @@ void _showMoreSheet(BuildContext context, String currentPath) {
                   borderRadius: BorderRadius.all(AppRadius.full),
                 ),
               ),
-              ..._moreSheetItems.map((item) {
-                final isActive = currentPath == item.path;
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    context.go(item.path);
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    height: 48,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.all(AppRadius.md),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          item.icon,
-                          size: 20,
-                          color: isActive
-                              ? Theme.of(context).colorScheme.onPrimary
-                              : context.beacon.sidebarMuted,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(
-                          item.label,
+              ..._moreSheetGroups.expand((group) {
+                final (label, items) = group;
+                return [
+                  // Section header
+                  if (label != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 4,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          label.toUpperCase(),
                           style: AppFonts.inter(
-                            fontSize: 15,
-                            fontWeight:
-                                isActive ? FontWeight.w600 : FontWeight.w500,
-                            color: isActive
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : context.beacon.sidebarText,
-                          ),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: context.beacon.sidebarMuted,
+                          ).copyWith(letterSpacing: 1.2),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
+                  // Items
+                  ...items.map((item) {
+                    final isActive = currentPath == item.path;
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        context.go(item.path);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        height: 48,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              item.icon,
+                              size: 20,
+                              color: isActive
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : context.beacon.sidebarMuted,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Text(
+                              item.label,
+                              style: AppFonts.inter(
+                                fontSize: 15,
+                                fontWeight:
+                                    isActive ? FontWeight.w600 : FontWeight.w500,
+                                color: isActive
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : context.beacon.sidebarText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ];
               }),
             ],
           ),
