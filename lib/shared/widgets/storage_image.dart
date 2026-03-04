@@ -9,9 +9,8 @@ import '../../core/services/supabase_service.dart';
 
 /// Displays an image stored in Supabase Storage.
 ///
-/// Downloads via an authenticated HTTP request directly to the Supabase
-/// Storage REST API, completely bypassing both public URLs (which return 400
-/// on private buckets) and the SDK's download() method (which can fail on web).
+/// Downloads via authenticated HTTP, with automatic retry and a signed-URL
+/// fallback when the auth session isn't immediately available.
 class StorageImage extends StatefulWidget {
   const StorageImage({
     super.key,
@@ -66,42 +65,78 @@ class _StorageImageState extends State<StorageImage> {
       return;
     }
 
-    // Build an authenticated request to the Supabase Storage REST API.
-    // This bypasses public URLs (400 on private buckets) and the SDK's
-    // download() method (unreliable on Flutter web).
-    final token = SupabaseService.client.auth.currentSession?.accessToken;
-    if (token == null) {
-      if (mounted) setState(() { _hasError = true; _loading = false; });
+    // Attempt 1: authenticated HTTP request (with retry for token availability)
+    final bytes = await _downloadAuthenticated(path);
+    if (bytes != null) {
+      if (mounted) setState(() { _bytes = bytes; _loading = false; });
       return;
     }
 
-    // Use the raw URL-encoded path as-is — do NOT decode + re-encode,
-    // because Uri.encodeComponent mangles characters like () that are
-    // valid in URIs and stored unencoded in Supabase Storage.
-    final requestUrl = Uri.parse(
-      '${AppConfig.supabaseUrl}/storage/v1/object/${widget.bucket}/$path',
-    );
-
-    try {
-      final response = await http.get(requestUrl, headers: {
-        'Authorization': 'Bearer $token',
-        'apikey': AppConfig.supabaseAnonKey,
-      });
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-        setState(() { _bytes = response.bodyBytes; _loading = false; });
-      } else {
-        setState(() { _hasError = true; _loading = false; });
-      }
-    } catch (_) {
-      if (mounted) setState(() { _hasError = true; _loading = false; });
+    // Attempt 2: signed URL via SDK (different auth flow, may succeed when
+    // the direct approach fails due to CORS or timing issues)
+    final signedBytes = await _downloadViaSigned(path);
+    if (signedBytes != null) {
+      if (mounted) setState(() { _bytes = signedBytes; _loading = false; });
+      return;
     }
+
+    if (mounted) setState(() { _hasError = true; _loading = false; });
   }
 
-  /// Extract the raw URL-encoded storage path from a Supabase Storage URL.
-  /// Returns the path as-is (still URL-encoded) — do NOT decode it.
+  /// Download bytes via an authenticated HTTP request to the Storage REST API.
+  /// Retries up to 3 times with 500 ms delay to handle auth session timing.
+  Future<Uint8List?> _downloadAuthenticated(String path) async {
+    for (int attempt = 0; attempt < 3; attempt++) {
+      final token = SupabaseService.client.auth.currentSession?.accessToken;
+      if (token == null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return null;
+        continue;
+      }
+
+      final requestUrl = Uri.parse(
+        '${AppConfig.supabaseUrl}/storage/v1/object/${widget.bucket}/$path',
+      );
+
+      try {
+        final response = await http.get(requestUrl, headers: {
+          'Authorization': 'Bearer $token',
+          'apikey': AppConfig.supabaseAnonKey,
+        });
+
+        if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+          return response.bodyBytes;
+        }
+      } catch (_) {
+        // Network error — try again
+      }
+
+      if (attempt < 2) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return null;
+      }
+    }
+    return null;
+  }
+
+  /// Fallback: create a signed URL via the SDK and download from that.
+  Future<Uint8List?> _downloadViaSigned(String path) async {
+    try {
+      final signedUrl = await SupabaseService.client.storage
+          .from(widget.bucket)
+          .createSignedUrl(path, 3600);
+
+      final response = await http.get(Uri.parse(signedUrl));
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        return response.bodyBytes;
+      }
+    } catch (_) {
+      // Signed URL approach also failed
+    }
+    return null;
+  }
+
+  /// Extract the storage path from a Supabase Storage URL.
   String? _extractPath(String url) {
     // Public: .../object/public/<bucket>/<path>
     final publicMarker = '/object/public/${widget.bucket}/';
@@ -115,6 +150,24 @@ class _StorageImageState extends State<StorageImage> {
     idx = url.indexOf(signMarker);
     if (idx != -1) {
       return url.substring(idx + signMarker.length).split('?').first;
+    }
+
+    // Authenticated: .../object/<bucket>/<path>
+    final authMarker = '/object/${widget.bucket}/';
+    idx = url.indexOf(authMarker);
+    if (idx != -1) {
+      // Make sure we didn't match /object/public/ or /object/sign/
+      final before = url.substring(0, idx + '/object/'.length);
+      if (!before.endsWith('/public/') && !before.endsWith('/sign/')) {
+        return url.substring(idx + authMarker.length).split('?').first;
+      }
+    }
+
+    // Last resort: look for bucket name anywhere in the URL
+    final bucketMarker = '/${widget.bucket}/';
+    idx = url.indexOf(bucketMarker);
+    if (idx != -1) {
+      return url.substring(idx + bucketMarker.length).split('?').first;
     }
 
     return null;

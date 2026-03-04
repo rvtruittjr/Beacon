@@ -52,26 +52,52 @@ class CustomFontLoader {
   }
 
   /// Download from Supabase Storage using authenticated HTTP request.
+  /// Retries up to 3 times with delays to handle auth session timing.
   static Future<Uint8List?> _downloadAuthenticated(String url) async {
     const bucket = 'brand-assets';
     final path = _extractPath(url, bucket);
     if (path == null) return null;
 
-    final token = SupabaseService.client.auth.currentSession?.accessToken;
-    if (token == null) return null;
+    for (int attempt = 0; attempt < 3; attempt++) {
+      final token = SupabaseService.client.auth.currentSession?.accessToken;
+      if (token == null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        continue;
+      }
 
-    final requestUrl = Uri.parse(
-      '${AppConfig.supabaseUrl}/storage/v1/object/$bucket/$path',
-    );
+      final requestUrl = Uri.parse(
+        '${AppConfig.supabaseUrl}/storage/v1/object/$bucket/$path',
+      );
 
-    final response = await http.get(requestUrl, headers: {
-      'Authorization': 'Bearer $token',
-      'apikey': AppConfig.supabaseAnonKey,
-    });
+      try {
+        final response = await http.get(requestUrl, headers: {
+          'Authorization': 'Bearer $token',
+          'apikey': AppConfig.supabaseAnonKey,
+        });
 
-    if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-      return response.bodyBytes;
+        if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+          return response.bodyBytes;
+        }
+      } catch (_) {
+        // Network error — retry
+      }
+
+      if (attempt < 2) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
     }
+
+    // Final fallback: try signed URL via SDK
+    try {
+      final signedUrl = await SupabaseService.client.storage
+          .from(bucket)
+          .createSignedUrl(path, 3600);
+      final response = await http.get(Uri.parse(signedUrl));
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        return response.bodyBytes;
+      }
+    } catch (_) {}
+
     return null;
   }
 
@@ -87,6 +113,13 @@ class CustomFontLoader {
     idx = url.indexOf(signMarker);
     if (idx != -1) {
       return url.substring(idx + signMarker.length).split('?').first;
+    }
+
+    // Fallback: look for bucket name anywhere in URL
+    final bucketMarker = '/$bucket/';
+    idx = url.indexOf(bucketMarker);
+    if (idx != -1) {
+      return url.substring(idx + bucketMarker.length).split('?').first;
     }
 
     return null;
