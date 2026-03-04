@@ -11,6 +11,7 @@ import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/platform_adaptive/adaptive_dialog.dart';
 import '../../models/brand_color_model.dart';
 import '../../providers/brand_kit_provider.dart';
+import 'palette_generator_sheet.dart';
 
 class ColorPaletteTab extends ConsumerWidget {
   const ColorPaletteTab({super.key});
@@ -36,14 +37,35 @@ class ColorPaletteTab extends ConsumerWidget {
 
         return Padding(
           padding: const EdgeInsets.only(top: AppSpacing.lg),
-          child: ReorderableWrap(
-            colors: colors,
-            onReorder: (oldIndex, newIndex) =>
-                _handleReorder(ref, colors, oldIndex, newIndex),
-            onAdd: () => _showColorDialog(context, ref),
-            onEdit: (c) => _showColorDialog(context, ref, existing: c),
-            onDelete: (c) => _deleteColor(ref, c),
-            onCopy: (hex) => _copyHex(context, hex),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    AppButton(
+                      label: 'Generate Palette',
+                      icon: Icons.auto_awesome,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => _showPaletteGenerator(context),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(
+                child: ReorderableWrap(
+                  colors: colors,
+                  onReorder: (oldIndex, newIndex) =>
+                      _handleReorder(ref, colors, oldIndex, newIndex),
+                  onAdd: () => _showColorDialog(context, ref),
+                  onEdit: (c) => _showColorDialog(context, ref, existing: c),
+                  onDelete: (c) => _deleteColor(ref, c),
+                  onCopy: (hex) => _copyHex(context, hex),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -97,6 +119,13 @@ class ColorPaletteTab extends ConsumerWidget {
     final orderedIds = reordered.map((c) => c.id).toList();
     await ref.read(colorsRepositoryProvider).reorderColors(orderedIds);
     ref.invalidate(brandColorsProvider);
+  }
+
+  void _showPaletteGenerator(BuildContext context) {
+    AdaptiveDialog.show(
+      context: context,
+      child: const PaletteGeneratorSheet(),
+    );
   }
 
   void _copyHex(BuildContext context, String hex) {

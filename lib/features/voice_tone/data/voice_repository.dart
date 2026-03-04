@@ -1,5 +1,6 @@
 import '../../../core/errors/error_handler.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../brand_changelog/data/changelog_repository.dart';
 import '../models/voice_model.dart';
 
 class VoiceRepository {
@@ -31,7 +32,9 @@ class VoiceRepository {
           .select()
           .single();
 
-      return VoiceModel.fromJson(response);
+      final result = VoiceModel.fromJson(response);
+      try { await ChangelogRepository().addEntry(brandId: brandId, action: 'updated', entityType: 'voice', entityLabel: voice.archetype); } catch (_) {}
+      return result;
     } catch (e, stack) {
       ErrorHandler.throwHandled(e, stack);
     }

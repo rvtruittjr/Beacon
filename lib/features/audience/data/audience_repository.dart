@@ -1,5 +1,6 @@
 import '../../../core/errors/error_handler.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../brand_changelog/data/changelog_repository.dart';
 import '../models/audience_model.dart';
 
 class AudienceRepository {
@@ -31,5 +32,7 @@ class AudienceRepository {
     await SupabaseService.client
         .from('brand_audience')
         .upsert(data, onConflict: 'brand_id');
+
+    try { await ChangelogRepository().addEntry(brandId: brandId, action: 'updated', entityType: 'audience', entityLabel: audience.personaName); } catch (_) {}
   }
 }

@@ -97,16 +97,14 @@ class FontTab extends ConsumerWidget {
           final brandId = ref.read(currentBrandProvider);
           if (brandId == null) return;
 
+          final user = SupabaseService.client.auth.currentUser;
           String? fontUrl;
-          if (source == 'upload' && file != null) {
-            final user = SupabaseService.client.auth.currentUser;
-            if (user != null) {
-              fontUrl = await StorageService.uploadFont(
-                user.id,
-                brandId,
-                file,
-              );
-            }
+          if (source == 'upload' && file != null && user != null) {
+            fontUrl = await StorageService.uploadFont(
+              user.id,
+              brandId,
+              file,
+            );
           }
 
           if (existing != null) {
@@ -126,6 +124,24 @@ class FontTab extends ConsumerWidget {
                   source: source,
                   url: fontUrl,
                 );
+
+            // Also add to assets table so it appears in Asset Library
+            if (fontUrl != null && user != null && file != null) {
+              final ext = file.extension?.toLowerCase() ?? 'otf';
+              try {
+                await SupabaseService.client.from('assets').insert({
+                  'brand_id': brandId,
+                  'user_id': user.id,
+                  'name': file.name,
+                  'file_url': fontUrl,
+                  'file_type': 'font',
+                  'mime_type': 'font/$ext',
+                  'file_size_bytes': file.size,
+                });
+              } catch (_) {
+                // Non-critical — font still saved to brand_fonts
+              }
+            }
           }
           ref.invalidate(brandFontsProvider);
         },
@@ -135,6 +151,17 @@ class FontTab extends ConsumerWidget {
 
   Future<void> _deleteFont(WidgetRef ref, BrandFontModel font) async {
     await ref.read(fontsRepositoryProvider).deleteFont(font.id);
+
+    // Also remove from assets table (synced with Asset Library)
+    if (font.url != null) {
+      try {
+        await SupabaseService.client
+            .from('assets')
+            .delete()
+            .eq('file_url', font.url!);
+      } catch (_) {}
+    }
+
     ref.invalidate(brandFontsProvider);
   }
 }

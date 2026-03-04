@@ -1,5 +1,6 @@
 import '../../../core/errors/error_handler.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../brand_changelog/data/changelog_repository.dart';
 import '../models/brand_font_model.dart';
 
 class FontsRepository {
@@ -44,7 +45,9 @@ class FontsRepository {
           .select()
           .single();
 
-      return BrandFontModel.fromJson(response);
+      final result = BrandFontModel.fromJson(response);
+      try { await ChangelogRepository().addEntry(brandId: brandId, action: 'added', entityType: 'font', entityLabel: label ?? family); } catch (_) {}
+      return result;
     } catch (e, stack) {
       ErrorHandler.throwHandled(e, stack);
     }
@@ -79,10 +82,20 @@ class FontsRepository {
 
   Future<void> deleteFont(String id) async {
     try {
+      final row = await SupabaseService.client
+          .from('brand_fonts')
+          .select('brand_id, label, family')
+          .eq('id', id)
+          .maybeSingle();
+
       await SupabaseService.client
           .from('brand_fonts')
           .delete()
           .eq('id', id);
+
+      if (row != null) {
+        try { await ChangelogRepository().addEntry(brandId: row['brand_id'] as String, action: 'deleted', entityType: 'font', entityLabel: (row['label'] as String?) ?? (row['family'] as String)); } catch (_) {}
+      }
     } catch (e, stack) {
       ErrorHandler.throwHandled(e, stack);
     }

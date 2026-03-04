@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../brand_changelog/data/changelog_repository.dart';
 import '../models/content_pillar_model.dart';
 
 final contentPillarRepositoryProvider =
@@ -50,7 +51,9 @@ class ContentPillarRepository {
         .select()
         .single();
 
-    return ContentPillarModel.fromJson(response);
+    final result = ContentPillarModel.fromJson(response);
+    try { await ChangelogRepository().addEntry(brandId: pillar.brandId, action: 'added', entityType: 'pillar', entityLabel: pillar.name); } catch (_) {}
+    return result;
   }
 
   Future<ContentPillarModel> updatePillar(
@@ -62,11 +65,23 @@ class ContentPillarRepository {
         .select()
         .single();
 
-    return ContentPillarModel.fromJson(response);
+    final result = ContentPillarModel.fromJson(response);
+    try { await ChangelogRepository().addEntry(brandId: pillar.brandId, action: 'updated', entityType: 'pillar', entityLabel: pillar.name); } catch (_) {}
+    return result;
   }
 
   Future<void> deletePillar(String id) async {
+    final row = await SupabaseService.client
+        .from('content_pillars')
+        .select('brand_id, name')
+        .eq('id', id)
+        .maybeSingle();
+
     await SupabaseService.client.from('content_pillars').delete().eq('id', id);
+
+    if (row != null) {
+      try { await ChangelogRepository().addEntry(brandId: row['brand_id'] as String, action: 'deleted', entityType: 'pillar', entityLabel: row['name'] as String?); } catch (_) {}
+    }
   }
 
   Future<void> _enforceFreeLimit(String brandId) async {

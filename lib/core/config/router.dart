@@ -20,6 +20,9 @@ import '../../features/content_archive/ui/archive_screen.dart';
 import '../../features/sharing/ui/share_settings_screen.dart';
 import '../../features/sharing/ui/password_gate_screen.dart';
 import '../../features/sharing/ui/public_brand_kit_screen.dart';
+import '../../features/brand_changelog/ui/changelog_screen.dart';
+import '../../features/inspiration_board/ui/inspiration_board_screen.dart';
+import '../../features/social_media_kit/ui/social_media_kit_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../features/settings/ui/subscription_screen.dart';
 import '../../shared/widgets/platform_adaptive/adaptive_scaffold.dart';
@@ -112,6 +115,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/app/content-pillars',
             pageBuilder: (context, state) =>
                 _fadeSlide(state, const ContentPillarsScreen()),
+          ),
+          GoRoute(
+            path: '/app/changelog',
+            pageBuilder: (context, state) =>
+                _fadeSlide(state, const ChangelogScreen()),
+          ),
+          GoRoute(
+            path: '/app/moodboard',
+            pageBuilder: (context, state) =>
+                _fadeSlide(state, const InspirationBoardScreen()),
+          ),
+          GoRoute(
+            path: '/app/social-kit',
+            pageBuilder: (context, state) =>
+                _fadeSlide(state, const SocialMediaKitScreen()),
           ),
           GoRoute(
             path: '/app/archive',

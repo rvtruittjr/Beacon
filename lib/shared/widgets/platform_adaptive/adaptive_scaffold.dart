@@ -20,11 +20,14 @@ const _allNavItems = [
   _NavItem('Snapshot', LucideIcons.home, '/app/snapshot'),
   _NavItem('Brand Kit', LucideIcons.palette, '/app/brand-kit'),
   _NavItem('Library', LucideIcons.folderOpen, '/app/library'),
+  _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
+  _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
   _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
   _NavItem('Audience', LucideIcons.users, '/app/audience'),
   _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
+  _NavItem('Changelog', LucideIcons.history, '/app/changelog'),
   _NavItem('Archive', LucideIcons.archive, '/app/archive'),
-  _NavItem('Sharing', LucideIcons.share2, '/app/sharing'),
+  _NavItem('Sharing', LucideIcons.link, '/app/sharing'),
   _NavItem('Settings', LucideIcons.settings, '/app/settings'),
 ];
 
@@ -37,10 +40,13 @@ const _mobileNavItems = [
 ];
 
 const _moreSheetItems = [
+  _NavItem('Moodboard', LucideIcons.layoutDashboard, '/app/moodboard'),
+  _NavItem('Social Kit', LucideIcons.share2, '/app/social-kit'),
   _NavItem('Voice', LucideIcons.mic2, '/app/voice'),
   _NavItem('Audience', LucideIcons.users, '/app/audience'),
   _NavItem('Pillars', LucideIcons.layoutGrid, '/app/content-pillars'),
-  _NavItem('Sharing', LucideIcons.share2, '/app/sharing'),
+  _NavItem('Changelog', LucideIcons.history, '/app/changelog'),
+  _NavItem('Sharing', LucideIcons.link, '/app/sharing'),
   _NavItem('Settings', LucideIcons.settings, '/app/settings'),
 ];
 

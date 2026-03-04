@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_exception.dart' as app;
 import '../../../core/errors/error_handler.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../brand_changelog/data/changelog_repository.dart';
 import '../models/asset_model.dart';
 
 class AssetLibraryRepository {
@@ -166,7 +167,9 @@ class AssetLibraryRepository {
         }
       }
 
-      return AssetModel.fromJson(response);
+      final result = AssetModel.fromJson(response);
+      try { await ChangelogRepository().addEntry(brandId: brandId, action: 'added', entityType: fileType ?? 'asset', entityLabel: name); } catch (_) {}
+      return result;
     } catch (e, stack) {
       if (e is app.AppException) rethrow;
       ErrorHandler.throwHandled(e, stack);
@@ -203,11 +206,16 @@ class AssetLibraryRepository {
       // Fetch asset first to check if it's a font and get the URL
       final row = await client
           .from('assets')
-          .select('file_type, file_url')
+          .select('brand_id, name, file_type, file_url')
           .eq('id', id)
           .maybeSingle();
 
       await client.from('assets').delete().eq('id', id);
+
+      // Log to changelog
+      if (row != null) {
+        try { await ChangelogRepository().addEntry(brandId: row['brand_id'] as String? ?? '', action: 'deleted', entityType: (row['file_type'] as String?) ?? 'asset', entityLabel: row['name'] as String?); } catch (_) {}
+      }
 
       // If the deleted asset was a font, also remove from brand_fonts
       if (row != null && row['file_type'] == 'font' && row['file_url'] != null) {
