@@ -75,11 +75,11 @@ class _StorageImageState extends State<StorageImage> {
       return;
     }
 
-    // Encode each path segment individually to handle spaces/special chars
-    final encodedPath =
-        path.split('/').map(Uri.encodeComponent).join('/');
+    // Use the raw URL-encoded path as-is — do NOT decode + re-encode,
+    // because Uri.encodeComponent mangles characters like () that are
+    // valid in URIs and stored unencoded in Supabase Storage.
     final requestUrl = Uri.parse(
-      '${AppConfig.supabaseUrl}/storage/v1/object/${widget.bucket}/$encodedPath',
+      '${AppConfig.supabaseUrl}/storage/v1/object/${widget.bucket}/$path',
     );
 
     try {
@@ -100,22 +100,21 @@ class _StorageImageState extends State<StorageImage> {
     }
   }
 
-  /// Extract storage path from a public or signed Supabase Storage URL.
+  /// Extract the raw URL-encoded storage path from a Supabase Storage URL.
+  /// Returns the path as-is (still URL-encoded) — do NOT decode it.
   String? _extractPath(String url) {
     // Public: .../object/public/<bucket>/<path>
     final publicMarker = '/object/public/${widget.bucket}/';
     var idx = url.indexOf(publicMarker);
     if (idx != -1) {
-      final raw = url.substring(idx + publicMarker.length).split('?').first;
-      return Uri.decodeFull(raw);
+      return url.substring(idx + publicMarker.length).split('?').first;
     }
 
     // Signed: .../object/sign/<bucket>/<path>?token=...
     final signMarker = '/object/sign/${widget.bucket}/';
     idx = url.indexOf(signMarker);
     if (idx != -1) {
-      final raw = url.substring(idx + signMarker.length).split('?').first;
-      return Uri.decodeFull(raw);
+      return url.substring(idx + signMarker.length).split('?').first;
     }
 
     return null;

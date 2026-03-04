@@ -68,17 +68,15 @@ class PdfExportService {
 
   /// Download image bytes via authenticated HTTP request to Storage REST API.
   static Future<Uint8List?> _downloadImage(String url) async {
+    // _extractPath returns the raw URL-encoded path — use it as-is.
     final path = _extractPath(url);
     if (path == null) return null;
 
-    final decoded = Uri.decodeFull(path);
     final token = SupabaseService.client.auth.currentSession?.accessToken;
     if (token == null) return null;
 
-    final encodedPath =
-        decoded.split('/').map(Uri.encodeComponent).join('/');
     final requestUrl = Uri.parse(
-      '${AppConfig.supabaseUrl}/storage/v1/object/$_bucket/$encodedPath',
+      '${AppConfig.supabaseUrl}/storage/v1/object/$_bucket/$path',
     );
 
     final response = await http.get(requestUrl, headers: {
