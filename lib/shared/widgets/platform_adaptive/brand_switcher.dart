@@ -88,6 +88,7 @@ class BrandSwitcher extends ConsumerWidget {
 
     showMenu<String>(
       context: context,
+      color: context.beacon.sidebarSurface,
       position: RelativeRect.fromLTRB(
         offset.dx,
         offset.dy + size.height,
@@ -107,10 +108,13 @@ class BrandSwitcher extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     brand.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: AppFonts.inter(
+                      fontSize: 13,
                       fontWeight:
                           isActive ? FontWeight.w600 : FontWeight.w400,
-                      color: isActive ? AppColors.blockYellow : null,
+                      color: isActive
+                          ? AppColors.blockYellow
+                          : context.beacon.sidebarText,
                     ),
                   ),
                 ),
@@ -134,7 +138,7 @@ class BrandSwitcher extends ConsumerWidget {
                     child: Icon(
                       LucideIcons.trash2,
                       size: 14,
-                      color: theme.colorScheme.outline,
+                      color: context.beacon.sidebarMuted,
                     ),
                   ),
                 ),
@@ -147,12 +151,13 @@ class BrandSwitcher extends ConsumerWidget {
           value: '__new__',
           child: Row(
             children: [
-              Icon(LucideIcons.plus, size: 16, color: theme.colorScheme.outline),
+              Icon(LucideIcons.plus, size: 16, color: context.beacon.sidebarMuted),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'New brand',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.outline,
+                style: AppFonts.inter(
+                  fontSize: 13,
+                  color: context.beacon.sidebarMuted,
                 ),
               ),
             ],
