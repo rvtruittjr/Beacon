@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_badge.dart';
+import '../../../../shared/widgets/storage_image.dart';
 import '../../models/asset_model.dart';
 
 class AssetCard extends StatefulWidget {
@@ -144,26 +144,15 @@ class _AssetCardState extends State<AssetCard> {
     final bgColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (asset.isImage) {
-      return CachedNetworkImage(
-        imageUrl: asset.fileUrl,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          color: bgColor,
-          child: Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: mutedColor,
-              ),
-            ),
+      return Container(
+        color: bgColor,
+        child: StorageImage(
+          url: asset.fileUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx) => Center(
+            child: Icon(Icons.broken_image_outlined,
+                color: mutedColor, size: 32),
           ),
-        ),
-        errorWidget: (_, __, ___) => Container(
-          color: bgColor,
-          child: Icon(Icons.broken_image_outlined,
-              color: mutedColor, size: 32),
         ),
       );
     }
