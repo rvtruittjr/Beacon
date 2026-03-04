@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
+import '../../../core/services/storage_service.dart';
 import '../data/asset_library_repository.dart';
 import '../models/asset_model.dart';
 
@@ -79,7 +80,7 @@ final assetsProvider =
   if (brandId == null) return [];
 
   final filters = ref.watch(assetFilterProvider);
-  return ref.watch(assetLibraryRepositoryProvider).getAssets(
+  final assets = await ref.watch(assetLibraryRepositoryProvider).getAssets(
         brandId: brandId,
         collectionId: filters.collectionId,
         searchQuery:
@@ -87,6 +88,15 @@ final assetsProvider =
         tagIds: filters.tagIds.isEmpty ? null : filters.tagIds,
         fileType: filters.fileType,
       );
+
+  // Convert public URLs to signed URLs so images load without auth headers.
+  // Private buckets return 400 on public URLs, so signed URLs are required.
+  final urls = assets.map((a) => a.fileUrl).toList();
+  final signedUrls = await StorageService.toSignedUrls(urls);
+  return [
+    for (int i = 0; i < assets.length; i++)
+      assets[i].copyWith(fileUrl: signedUrls[i]),
+  ];
 });
 
 final collectionsProvider =

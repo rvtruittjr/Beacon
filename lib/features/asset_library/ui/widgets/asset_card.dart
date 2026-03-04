@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_badge.dart';
-import '../../../../shared/widgets/storage_image.dart';
 import '../../models/asset_model.dart';
 
 class AssetCard extends StatefulWidget {
@@ -144,14 +145,32 @@ class _AssetCardState extends State<AssetCard> {
     final bgColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (asset.isImage) {
-      return Container(
-        color: bgColor,
-        child: StorageImage(
-          url: asset.fileUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (ctx) => Center(
-            child: Icon(Icons.broken_image_outlined,
-                color: mutedColor, size: 32),
+      // fileUrl is a signed URL (converted in assetsProvider), so load directly.
+      final isSvg = asset.fileUrl.split('?').first.toLowerCase().endsWith('.svg');
+      if (isSvg) {
+        return _SvgThumbnail(url: asset.fileUrl, bgColor: bgColor, mutedColor: mutedColor);
+      }
+      return Image.network(
+        asset.fileUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        loadingBuilder: (ctx, child, progress) {
+          if (progress == null) return child;
+          return Container(
+            color: bgColor,
+            child: Center(
+              child: SizedBox(
+                width: 24, height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2, color: mutedColor),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (ctx, _, __) => Container(
+          color: bgColor,
+          child: Center(
+            child: Icon(Icons.broken_image_outlined, color: mutedColor, size: 32),
           ),
         ),
       );
@@ -238,6 +257,56 @@ class _AssetCardState extends State<AssetCard> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Loads SVG from a signed URL via HTTP, then renders with SvgPicture.memory.
+class _SvgThumbnail extends StatefulWidget {
+  const _SvgThumbnail({
+    required this.url,
+    required this.bgColor,
+    required this.mutedColor,
+  });
+  final String url;
+  final Color bgColor;
+  final Color mutedColor;
+
+  @override
+  State<_SvgThumbnail> createState() => _SvgThumbnailState();
+}
+
+class _SvgThumbnailState extends State<_SvgThumbnail> {
+  late Future<http.Response> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = http.get(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<http.Response>(
+      future: _future,
+      builder: (ctx, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return Container(
+            color: widget.bgColor,
+            child: const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+        if (snap.hasError || snap.data == null || snap.data!.statusCode != 200) {
+          return Container(
+            color: widget.bgColor,
+            child: Center(child: Icon(Icons.broken_image_outlined, color: widget.mutedColor, size: 32)),
+          );
+        }
+        return Container(
+          color: widget.bgColor,
+          child: SvgPicture.memory(snap.data!.bodyBytes, fit: BoxFit.contain),
+        );
+      },
     );
   }
 }
