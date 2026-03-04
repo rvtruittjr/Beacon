@@ -24,7 +24,7 @@ class PdfExportService {
       if (url.split('?').first.toLowerCase().endsWith('.svg')) continue;
 
       try {
-        final bytes = await _downloadImage(url);
+        final bytes = await downloadImage(url);
         if (bytes != null && bytes.isNotEmpty && _isRasterImage(bytes)) {
           logoImages.add(pw.MemoryImage(bytes));
         }
@@ -50,7 +50,7 @@ class PdfExportService {
   }
 
   /// Extract storage path from a public or signed URL.
-  static String? _extractPath(String url) {
+  static String? extractPath(String url) {
     // Public: .../object/public/<bucket>/<path>
     final publicMarker = '/object/public/$_bucket/';
     var index = url.indexOf(publicMarker);
@@ -67,9 +67,8 @@ class PdfExportService {
   }
 
   /// Download image bytes via authenticated HTTP request to Storage REST API.
-  static Future<Uint8List?> _downloadImage(String url) async {
-    // _extractPath returns the raw URL-encoded path — use it as-is.
-    final path = _extractPath(url);
+  static Future<Uint8List?> downloadImage(String url) async {
+    final path = extractPath(url);
     if (path == null) return null;
 
     final token = SupabaseService.client.auth.currentSession?.accessToken;

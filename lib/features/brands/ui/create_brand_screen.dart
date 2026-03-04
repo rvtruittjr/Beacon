@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_fonts.dart';
 import '../../../core/config/design_tokens.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/providers/app_providers.dart';
@@ -9,6 +10,14 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/platform_adaptive/adaptive_dialog.dart';
 import '../../auth/ui/onboarding/onboarding_state.dart';
+import '../../brand_kit/models/brand_kit_template.dart';
+import '../../brand_kit/ui/widgets/template_picker.dart';
+import '../../brand_kit/providers/brand_kit_provider.dart';
+import '../../brand_kit/services/template_service.dart';
+import '../../audience/providers/audience_provider.dart';
+import '../../content_pillars/data/content_pillar_repository.dart';
+import '../../content_pillars/providers/content_pillar_provider.dart' show contentPillarsListProvider;
+import '../../voice_tone/providers/voice_provider.dart';
 import '../providers/brand_provider.dart';
 
 class CreateBrandScreen extends ConsumerStatefulWidget {
@@ -31,6 +40,9 @@ class _CreateBrandScreenState extends ConsumerState<CreateBrandScreen> {
   bool _isLoading = false;
   String? _error;
   bool _isUpgradeRequired = false;
+  int _step = 1; // 1 = name, 2 = template picker
+  String? _createdBrandId;
+  bool _wasFirstBrand = false;
 
   @override
   void dispose() {
@@ -66,15 +78,17 @@ class _CreateBrandScreenState extends ConsumerState<CreateBrandScreen> {
       ref.read(currentBrandProvider.notifier).state = brand.id;
       ref.invalidate(userBrandsProvider);
 
-      Navigator.of(context).pop();
+      _createdBrandId = brand.id;
+      _wasFirstBrand = existingBrands.isEmpty;
 
-      if (existingBrands.isEmpty) {
-        // Seed brand name so Done step can show it in the preview card
+      if (_wasFirstBrand) {
         ref.read(onboardingProvider.notifier).setBrandName(name);
-        context.go('/onboarding');
-      } else {
-        context.go('/app/snapshot');
       }
+
+      setState(() {
+        _step = 2;
+        _isLoading = false;
+      });
     } on UpgradeRequiredException {
       if (!mounted) return;
       setState(() {
@@ -96,6 +110,10 @@ class _CreateBrandScreenState extends ConsumerState<CreateBrandScreen> {
 
     if (_isUpgradeRequired) {
       return _buildUpgradePrompt(theme);
+    }
+
+    if (_step == 2) {
+      return _buildTemplatePicker(theme);
     }
 
     return Padding(
@@ -147,6 +165,84 @@ class _CreateBrandScreenState extends ConsumerState<CreateBrandScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateAfterCreate() {
+    Navigator.of(context).pop();
+    if (_wasFirstBrand) {
+      context.go('/onboarding');
+    } else {
+      context.go('/app/snapshot');
+    }
+  }
+
+  Future<void> _applyTemplate(BrandKitTemplate template) async {
+    if (_createdBrandId == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final service = TemplateService(
+        colorsRepo: ref.read(colorsRepositoryProvider),
+        fontsRepo: ref.read(fontsRepositoryProvider),
+        voiceRepo: ref.read(voiceRepositoryProvider),
+        audienceRepo: ref.read(audienceRepositoryProvider),
+        pillarRepo: ref.read(contentPillarRepositoryProvider),
+      );
+
+      await service.applyTemplate(_createdBrandId!, template);
+
+      // Invalidate all providers so the UI refreshes
+      ref.invalidate(brandColorsProvider);
+      ref.invalidate(brandFontsProvider);
+      ref.invalidate(voiceProvider);
+      ref.invalidate(audienceProvider);
+      ref.invalidate(contentPillarsListProvider);
+
+      if (!mounted) return;
+      _navigateAfterCreate();
+    } catch (_) {
+      if (!mounted) return;
+      // Template failed but brand was created — navigate anyway
+      _navigateAfterCreate();
+    }
+  }
+
+  Widget _buildTemplatePicker(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
+
+    if (_isLoading) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Applying template...',
+              style: AppFonts.inter(fontSize: 14, color: mutedColor),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 520),
+        child: SingleChildScrollView(
+          child: TemplatePicker(
+            onSelected: _applyTemplate,
+            onSkip: _navigateAfterCreate,
+          ),
+        ),
       ),
     );
   }

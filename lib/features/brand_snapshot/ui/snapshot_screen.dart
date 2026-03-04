@@ -25,6 +25,7 @@ import 'widgets/social_accounts_snapshot.dart';
 import 'widgets/brand_health_card.dart';
 import '../models/brand_health_score.dart';
 import '../services/pdf_export_service.dart';
+import '../../brand_kit/services/asset_pack_service.dart';
 
 class SnapshotScreen extends ConsumerWidget {
   const SnapshotScreen({super.key});
@@ -67,6 +68,7 @@ class SnapshotScreen extends ConsumerWidget {
       SnapshotHeader(
         brand: data.brand,
         onExportPdf: () => _exportPdf(context, data),
+        onExportZip: () => _exportZip(context, data),
       ),
       BrandHealthCard(score: healthScore),
       ColorPaletteSection(colors: data.colors),
@@ -272,6 +274,36 @@ Future<void> _exportPdf(BuildContext context, SnapshotData data) async {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to generate PDF: $e')),
+      );
+    }
+  }
+}
+
+Future<void> _exportZip(BuildContext context, SnapshotData data) async {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Generating asset pack…')),
+  );
+
+  try {
+    final bytes = await AssetPackService.generate(data);
+    final fileName = '${data.brand.name} - Asset Pack.zip';
+
+    final blob = html.Blob([bytes], 'application/zip');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Asset pack downloaded!')),
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to generate asset pack: $e')),
       );
     }
   }

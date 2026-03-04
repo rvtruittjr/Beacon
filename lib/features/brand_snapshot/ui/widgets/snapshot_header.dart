@@ -15,9 +15,11 @@ class SnapshotHeader extends StatelessWidget {
     super.key,
     required this.brand,
     this.onExportPdf,
+    this.onExportZip,
   });
   final BrandModel brand;
   final VoidCallback? onExportPdf;
+  final VoidCallback? onExportZip;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +83,15 @@ class SnapshotHeader extends StatelessWidget {
               icon: LucideIcons.fileText,
               variant: AppButtonVariant.icon,
               onPressed: onExportPdf,
+            ),
+          ],
+          if (onExportZip != null) ...[
+            const SizedBox(width: AppSpacing.xs),
+            AppButton(
+              label: null,
+              icon: LucideIcons.archive,
+              variant: AppButtonVariant.icon,
+              onPressed: onExportZip,
             ),
           ],
           const SizedBox(width: AppSpacing.xs),
