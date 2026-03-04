@@ -160,35 +160,52 @@ class _LogoCard extends StatelessWidget {
           borderRadius: BorderRadius.all(AppRadius.lg),
           boxShadow: isDark ? null : AppShadows.sm,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: url.isNotEmpty
-                    ? StorageImage(
-                        url: url,
-                        fit: BoxFit.contain,
-                        errorBuilder: (ctx) => Icon(
-                          Icons.image_outlined,
-                          size: 32,
-                          color: mutedColor,
-                        ),
-                      )
-                    : Icon(
-                        Icons.image_outlined,
-                        size: 32,
-                        color: mutedColor,
-                      ),
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: url.isNotEmpty
+                        ? StorageImage(
+                            url: url,
+                            fit: BoxFit.contain,
+                            errorBuilder: (ctx) => Icon(
+                              Icons.image_outlined,
+                              size: 32,
+                              color: mutedColor,
+                            ),
+                          )
+                        : Icon(
+                            Icons.image_outlined,
+                            size: 32,
+                            color: mutedColor,
+                          ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    name,
+                    style: TextStyle(color: mutedColor, fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Text(
-                name,
-                style: TextStyle(color: mutedColor, fontSize: 12),
-                overflow: TextOverflow.ellipsis,
+            Positioned(
+              top: 4,
+              right: 4,
+              child: IconButton(
+                icon: Icon(Icons.delete_outline, size: 18, color: mutedColor),
+                onPressed: onDelete,
+                style: IconButton.styleFrom(
+                  backgroundColor: (isDark ? Colors.black : Colors.white).withOpacity(0.7),
+                  padding: const EdgeInsets.all(4),
+                  minimumSize: const Size(28, 28),
+                ),
               ),
             ),
           ],

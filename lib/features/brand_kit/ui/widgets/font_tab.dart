@@ -157,7 +157,6 @@ class _FontRow extends StatefulWidget {
 }
 
 class _FontRowState extends State<_FontRow> {
-  bool _isHovered = false;
   bool _fontLoaded = false;
 
   @override
@@ -213,9 +212,9 @@ class _FontRowState extends State<_FontRow> {
       }
     }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+    return GestureDetector(
+      onLongPress: () => _showContextMenuMobile(context),
+      onSecondaryTapUp: (details) => _showContextMenu(context, details),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
@@ -244,20 +243,49 @@ class _FontRowState extends State<_FontRow> {
                 ],
               ),
             ),
-            if (_isHovered) ...[
-              IconButton(
-                icon: Icon(Icons.edit_outlined, size: 18, color: mutedColor),
-                onPressed: widget.onEdit,
-              ),
-              IconButton(
-                icon: Icon(Icons.delete_outline, size: 18, color: mutedColor),
-                onPressed: widget.onDelete,
-              ),
-            ],
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 18, color: mutedColor),
+              onPressed: widget.onEdit,
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, size: 18, color: mutedColor),
+              onPressed: widget.onDelete,
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void _showContextMenu(BuildContext context, TapUpDetails details) {
+    _showMenu(context, details.globalPosition);
+  }
+
+  void _showContextMenuMobile(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final position = box.localToGlobal(Offset.zero) +
+        Offset(box.size.width / 2, box.size.height);
+    _showMenu(context, position);
+  }
+
+  void _showMenu(BuildContext context, Offset position) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+        const PopupMenuItem(value: 'delete', child: Text('Delete')),
+      ],
+    ).then((value) {
+      if (value == 'edit') widget.onEdit();
+      if (value == 'delete') widget.onDelete();
+    });
   }
 }
 

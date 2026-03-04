@@ -181,8 +181,6 @@ class _ColorSwatchItem extends StatefulWidget {
 }
 
 class _ColorSwatchItemState extends State<_ColorSwatchItem> {
-  bool _isHovered = false;
-
   Color get _parsedColor {
     final clean = widget.color.hex.replaceFirst('#', '');
     return Color(int.parse('FF$clean', radix: 16));
@@ -194,74 +192,68 @@ class _ColorSwatchItemState extends State<_ColorSwatchItem> {
     final isDark = theme.brightness == Brightness.dark;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onSecondaryTapUp: (details) => _showContextMenu(context, details),
-        onLongPress: () => _showContextMenuMobile(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: _parsedColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color:
-                          Theme.of(context).colorScheme.outline,
-                      width: 1,
+    return GestureDetector(
+      onTap: widget.onTap,
+      onSecondaryTapUp: (details) => _showContextMenu(context, details),
+      onLongPress: () => _showContextMenuMobile(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _parsedColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.outline,
+                    width: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.color.label ?? 'Unnamed',
+                      style: AppFonts.inter(
+                        fontSize: 14,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimaryLight,
+                      ).copyWith(fontWeight: FontWeight.w600),
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.color.hex.toUpperCase(),
+                      style:
+                          AppFonts.inter(fontSize: 12, color: mutedColor),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.color.label ?? 'Unnamed',
-                        style: AppFonts.inter(
-                          fontSize: 14,
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
-                        ).copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.color.hex.toUpperCase(),
-                        style:
-                            AppFonts.inter(fontSize: 12, color: mutedColor),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_isHovered) ...[
-                  IconButton(
-                    icon:
-                        Icon(Icons.edit_outlined, size: 18, color: mutedColor),
-                    onPressed: widget.onEdit,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                        Icons.delete_outline, size: 18, color: mutedColor),
-                    onPressed: widget.onDelete,
-                  ),
-                ],
-              ],
-            ),
+              ),
+              IconButton(
+                icon:
+                    Icon(Icons.edit_outlined, size: 18, color: mutedColor),
+                onPressed: widget.onEdit,
+              ),
+              IconButton(
+                icon: Icon(
+                    Icons.delete_outline, size: 18, color: mutedColor),
+                onPressed: widget.onDelete,
+              ),
+            ],
           ),
         ),
       ),
