@@ -32,25 +32,52 @@ class DrawingCanvas extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..isAntiAlias = true;
 
-    final pts = stroke.points;
+    // Smooth points first, then build bezier path
+    final pts = _smooth(stroke.points);
     final path = Path();
     path.moveTo(pts.first.x, pts.first.y);
 
     if (pts.length == 2) {
       path.lineTo(pts[1].x, pts[1].y);
     } else {
-      // Use quadratic bezier curves through midpoints for smooth lines
+      // Quadratic bezier curves through midpoints
       for (var i = 1; i < pts.length - 1; i++) {
         final midX = (pts[i].x + pts[i + 1].x) / 2;
         final midY = (pts[i].y + pts[i + 1].y) / 2;
         path.quadraticBezierTo(pts[i].x, pts[i].y, midX, midY);
       }
-      // Connect to the last point
-      final last = pts.last;
-      path.lineTo(last.x, last.y);
+      path.lineTo(pts.last.x, pts.last.y);
     }
 
     canvas.drawPath(path, paint);
+  }
+
+  /// Moving-average smooth pass — averages each point with its neighbors.
+  static List<DrawingPoint> _smooth(List<DrawingPoint> raw) {
+    if (raw.length < 5) return raw;
+
+    final result = <DrawingPoint>[raw.first];
+    for (var i = 1; i < raw.length - 1; i++) {
+      // Weighted average: 25% prev, 50% current, 25% next
+      final x = raw[i - 1].x * 0.25 + raw[i].x * 0.5 + raw[i + 1].x * 0.25;
+      final y = raw[i - 1].y * 0.25 + raw[i].y * 0.5 + raw[i + 1].y * 0.25;
+      result.add(DrawingPoint(x, y));
+    }
+    result.add(raw.last);
+
+    // Second pass for extra smoothness
+    if (result.length < 5) return result;
+    final result2 = <DrawingPoint>[result.first];
+    for (var i = 1; i < result.length - 1; i++) {
+      final x =
+          result[i - 1].x * 0.25 + result[i].x * 0.5 + result[i + 1].x * 0.25;
+      final y =
+          result[i - 1].y * 0.25 + result[i].y * 0.5 + result[i + 1].y * 0.25;
+      result2.add(DrawingPoint(x, y));
+    }
+    result2.add(result.last);
+
+    return result2;
   }
 
   static Color _hexToColor(String hex) {

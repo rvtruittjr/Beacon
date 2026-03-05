@@ -255,6 +255,13 @@ class _InspirationBoardScreenState
       final current = ref.read(activeStrokeProvider);
       if (current == null) return;
       final pos = d.localPosition;
+      // Skip points too close together to avoid jagged lines
+      if (current.points.isNotEmpty) {
+        final last = current.points.last;
+        final dx = pos.dx - last.x;
+        final dy = pos.dy - last.y;
+        if (dx * dx + dy * dy < 9.0) return; // min 3px distance
+      }
       ref.read(activeStrokeProvider.notifier).state = DrawingStroke(
         points: [...current.points, DrawingPoint(pos.dx, pos.dy)],
         colorHex: current.colorHex,
