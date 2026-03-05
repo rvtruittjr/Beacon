@@ -29,13 +29,25 @@ class DrawingCanvas extends CustomPainter {
       ..strokeWidth = stroke.strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true;
 
+    final pts = stroke.points;
     final path = Path();
-    path.moveTo(stroke.points.first.x, stroke.points.first.y);
+    path.moveTo(pts.first.x, pts.first.y);
 
-    for (var i = 1; i < stroke.points.length; i++) {
-      path.lineTo(stroke.points[i].x, stroke.points[i].y);
+    if (pts.length == 2) {
+      path.lineTo(pts[1].x, pts[1].y);
+    } else {
+      // Use quadratic bezier curves through midpoints for smooth lines
+      for (var i = 1; i < pts.length - 1; i++) {
+        final midX = (pts[i].x + pts[i + 1].x) / 2;
+        final midY = (pts[i].y + pts[i + 1].y) / 2;
+        path.quadraticBezierTo(pts[i].x, pts[i].y, midX, midY);
+      }
+      // Connect to the last point
+      final last = pts.last;
+      path.lineTo(last.x, last.y);
     }
 
     canvas.drawPath(path, paint);
