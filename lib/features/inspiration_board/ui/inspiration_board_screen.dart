@@ -17,6 +17,8 @@ import 'widgets/add_item_dialog.dart';
 import 'widgets/board_item.dart';
 import 'widgets/board_toolbar.dart';
 import 'widgets/drawing_canvas.dart';
+import 'widgets/connector_item.dart';
+import 'widgets/line_item.dart';
 import 'widgets/shape_item.dart';
 import 'widgets/sticky_note_item.dart';
 import 'widgets/text_item.dart';
@@ -133,6 +135,17 @@ class _InspirationBoardScreenState
                             ),
                           ),
 
+                          // Line preview while dragging
+                          Positioned.fill(
+                            child: _LinePreview(ref: ref),
+                          ),
+
+                          // Connector items (below regular items so they appear as lines behind)
+                          ..._buildConnectors(boardItems),
+
+                          // Line items (absolute coordinates)
+                          ..._buildLineItems(boardItems),
+
                           // Board items layer
                           ..._buildBoardItems(boardItems),
 
@@ -172,9 +185,36 @@ class _InspirationBoardScreenState
     );
   }
 
+  List<Widget> _buildConnectors(List<InspirationItemModel> items) {
+    return items
+        .where((item) => item.type == 'connector')
+        .map((item) => ConnectorItem(
+              key: ValueKey(item.id),
+              item: item,
+              allItems: items,
+              onDelete: () => _deleteItem(item.id),
+            ))
+        .toList();
+  }
+
+  List<Widget> _buildLineItems(List<InspirationItemModel> items) {
+    return items
+        .where((item) => item.type == 'line')
+        .map((item) => LineItem(
+              key: ValueKey(item.id),
+              item: item,
+              onDelete: () => _deleteItem(item.id),
+              onDataChanged: (data) => _updateData(item.id, data),
+            ))
+        .toList();
+  }
+
   List<Widget> _buildBoardItems(List<InspirationItemModel> items) {
     return items
-        .where((item) => item.type != 'drawing')
+        .where((item) =>
+            item.type != 'drawing' &&
+            item.type != 'line' &&
+            item.type != 'connector')
         .map((item) {
       final Widget child = switch (item.type) {
         'sticky_note' => StickyNoteItem(
@@ -247,6 +287,10 @@ class _InspirationBoardScreenState
       );
     } else if (tool == ToolMode.shape) {
       _shapeStart = d.localPosition;
+    } else if (tool == ToolMode.line) {
+      final pos = d.localPosition;
+      ref.read(activeLineStartProvider.notifier).state = pos;
+      ref.read(activeLineEndProvider.notifier).state = pos;
     }
   }
 
@@ -267,6 +311,8 @@ class _InspirationBoardScreenState
         colorHex: current.colorHex,
         strokeWidth: current.strokeWidth,
       );
+    } else if (tool == ToolMode.line) {
+      ref.read(activeLineEndProvider.notifier).state = d.localPosition;
     }
   }
 
@@ -281,6 +327,18 @@ class _InspirationBoardScreenState
     } else if (tool == ToolMode.shape && _shapeStart != null) {
       _createShapeItem(_shapeStart!.dx, _shapeStart!.dy);
       _shapeStart = null;
+    } else if (tool == ToolMode.line) {
+      final start = ref.read(activeLineStartProvider);
+      final end = ref.read(activeLineEndProvider);
+      if (start != null && end != null) {
+        final dx = (end.dx - start.dx).abs();
+        final dy = (end.dy - start.dy).abs();
+        if (dx > 5 || dy > 5) {
+          _createLineItem(start.dx, start.dy, end.dx, end.dy);
+        }
+      }
+      ref.read(activeLineStartProvider.notifier).state = null;
+      ref.read(activeLineEndProvider.notifier).state = null;
     }
   }
 
@@ -295,6 +353,8 @@ class _InspirationBoardScreenState
         _createShapeItem(pos.dx, pos.dy);
       case ToolMode.eraser:
         _eraseAt(pos.dx, pos.dy);
+      case ToolMode.connector:
+        _handleConnectorTap(pos.dx, pos.dy);
       default:
         break;
     }
@@ -376,6 +436,113 @@ class _InspirationBoardScreenState
     } catch (e) {
       _showError('Failed to add shape: $e');
     }
+  }
+
+  Future<void> _createLineItem(double x1, double y1, double x2, double y2) async {
+    final brandId = ref.read(currentBrandProvider);
+    if (brandId == null) return;
+
+    try {
+      final repo = ref.read(inspirationRepositoryProvider);
+      final color = ref.read(lineColorProvider);
+      final strokeWidth = ref.read(lineStrokeWidthProvider);
+      final curved = ref.read(lineCurvedProvider);
+      final item = await repo.addItem(
+        brandId: brandId,
+        posX: 0,
+        posY: 0,
+        width: 1,
+        height: 1,
+        type: 'line',
+        data: {
+          'x1': x1,
+          'y1': y1,
+          'x2': x2,
+          'y2': y2,
+          'color': color,
+          'strokeWidth': strokeWidth,
+          'curved': curved,
+          'cx': (x1 + x2) / 2,
+          'cy': (y1 + y2) / 2,
+        },
+      );
+      ref.read(boardStateProvider.notifier).addItem(item);
+    } catch (e) {
+      _showError('Failed to add line: $e');
+    }
+  }
+
+  void _handleConnectorTap(double x, double y) {
+    final sourceId = ref.read(connectorSourceProvider);
+    final nearest = _findNearestItem(x, y);
+
+    if (nearest == null) {
+      // Clicked empty space — reset
+      ref.read(connectorSourceProvider.notifier).state = null;
+      return;
+    }
+
+    if (sourceId == null) {
+      // First tap — select source
+      ref.read(connectorSourceProvider.notifier).state = nearest.id;
+    } else {
+      // Second tap — create connector
+      if (nearest.id != sourceId) {
+        _createConnector(sourceId, nearest.id);
+      }
+      ref.read(connectorSourceProvider.notifier).state = null;
+    }
+  }
+
+  Future<void> _createConnector(String fromId, String toId) async {
+    final brandId = ref.read(currentBrandProvider);
+    if (brandId == null) return;
+
+    try {
+      final repo = ref.read(inspirationRepositoryProvider);
+      final color = ref.read(connectorColorProvider);
+      final item = await repo.addItem(
+        brandId: brandId,
+        posX: 0,
+        posY: 0,
+        width: 1,
+        height: 1,
+        type: 'connector',
+        data: {
+          'fromItemId': fromId,
+          'toItemId': toId,
+          'color': color,
+          'strokeWidth': 2.0,
+        },
+      );
+      ref.read(boardStateProvider.notifier).addItem(item);
+    } catch (e) {
+      _showError('Failed to add connector: $e');
+    }
+  }
+
+  InspirationItemModel? _findNearestItem(double x, double y) {
+    const threshold = 80.0;
+    final items = ref.read(boardStateProvider);
+    InspirationItemModel? nearest;
+    double minDist = double.infinity;
+
+    for (final item in items) {
+      // Skip non-visual items
+      if (item.type == 'drawing' || item.type == 'line' || item.type == 'connector') {
+        continue;
+      }
+      final cx = item.posX + item.width / 2;
+      final cy = item.posY + item.height / 2;
+      final dist = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = item;
+      }
+    }
+
+    if (minDist > threshold * threshold) return null;
+    return nearest;
   }
 
   Future<void> _persistDrawingStroke(DrawingStroke stroke) async {
@@ -494,4 +661,67 @@ class _InspirationBoardScreenState
       );
     }
   }
+}
+
+/// Live preview line while dragging the line tool.
+class _LinePreview extends StatelessWidget {
+  const _LinePreview({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final start = ref.watch(activeLineStartProvider);
+    final end = ref.watch(activeLineEndProvider);
+    if (start == null || end == null) return const SizedBox.shrink();
+
+    final color = ref.watch(lineColorProvider);
+    final strokeWidth = ref.watch(lineStrokeWidthProvider);
+    final clean = color.replaceFirst('#', '');
+    final c = clean.length == 6
+        ? Color(0xFF000000 | int.parse(clean, radix: 16))
+        : const Color(0xFFFFFFFF);
+
+    return CustomPaint(
+      painter: _LinePreviewPainter(
+        start: start,
+        end: end,
+        color: c,
+        strokeWidth: strokeWidth,
+      ),
+    );
+  }
+}
+
+class _LinePreviewPainter extends CustomPainter {
+  _LinePreviewPainter({
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  final Offset start;
+  final Offset end;
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.6)
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true;
+
+    canvas.drawLine(start, end, paint);
+  }
+
+  @override
+  bool shouldRepaint(_LinePreviewPainter old) =>
+      old.start != start ||
+      old.end != end ||
+      old.color != color ||
+      old.strokeWidth != strokeWidth;
 }

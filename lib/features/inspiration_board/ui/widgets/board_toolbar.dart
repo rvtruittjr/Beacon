@@ -59,6 +59,15 @@ class BoardToolbar extends ConsumerWidget {
                 mutedColor: mutedColor,
               ),
               _ToolButton(
+                icon: LucideIcons.minus,
+                label: 'Line',
+                isActive: activeTool == ToolMode.line,
+                onTap: () => ref.read(activeToolProvider.notifier).state =
+                    ToolMode.line,
+                textColor: textColor,
+                mutedColor: mutedColor,
+              ),
+              _ToolButton(
                 icon: LucideIcons.square,
                 label: 'Shape',
                 isActive: activeTool == ToolMode.shape,
@@ -86,6 +95,18 @@ class BoardToolbar extends ConsumerWidget {
                 mutedColor: mutedColor,
               ),
               _ToolButton(
+                icon: LucideIcons.link,
+                label: 'Connect',
+                isActive: activeTool == ToolMode.connector,
+                onTap: () {
+                  ref.read(activeToolProvider.notifier).state =
+                      ToolMode.connector;
+                  ref.read(connectorSourceProvider.notifier).state = null;
+                },
+                textColor: textColor,
+                mutedColor: mutedColor,
+              ),
+              _ToolButton(
                 icon: LucideIcons.eraser,
                 label: 'Erase',
                 isActive: activeTool == ToolMode.eraser,
@@ -98,7 +119,10 @@ class BoardToolbar extends ConsumerWidget {
           ),
         ),
         // Sub-options bar
-        if (activeTool == ToolMode.pen || activeTool == ToolMode.shape)
+        if (activeTool == ToolMode.pen ||
+            activeTool == ToolMode.shape ||
+            activeTool == ToolMode.line ||
+            activeTool == ToolMode.connector)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: _SubOptionsBar(
@@ -189,15 +213,22 @@ class _SubOptionsBar extends ConsumerWidget {
           // Color dots
           ...toolbarColors.take(6).map((hex) {
             final color = _hexToColor(hex);
-            final isSelected = activeTool == ToolMode.pen
-                ? ref.watch(penColorProvider) == hex
-                : ref.watch(shapeFillColorProvider) == hex;
+            final isSelected = switch (activeTool) {
+              ToolMode.pen => ref.watch(penColorProvider) == hex,
+              ToolMode.line => ref.watch(lineColorProvider) == hex,
+              ToolMode.connector => ref.watch(connectorColorProvider) == hex,
+              _ => ref.watch(shapeFillColorProvider) == hex,
+            };
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
               child: GestureDetector(
                 onTap: () {
                   if (activeTool == ToolMode.pen) {
                     ref.read(penColorProvider.notifier).state = hex;
+                  } else if (activeTool == ToolMode.line) {
+                    ref.read(lineColorProvider.notifier).state = hex;
+                  } else if (activeTool == ToolMode.connector) {
+                    ref.read(connectorColorProvider.notifier).state = hex;
                   } else {
                     ref.read(shapeFillColorProvider.notifier).state = hex;
                   }
@@ -260,6 +291,21 @@ class _SubOptionsBar extends ConsumerWidget {
               mutedColor: mutedColor,
             ),
           ],
+          if (activeTool == ToolMode.line) ...[
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 80,
+              child: Slider(
+                value: ref.watch(lineStrokeWidthProvider),
+                min: 1,
+                max: 8,
+                onChanged: (v) =>
+                    ref.read(lineStrokeWidthProvider.notifier).state = v,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            _CurvedToggle(ref: ref, mutedColor: mutedColor),
+          ],
         ],
       ),
     );
@@ -303,6 +349,53 @@ class _ShapeTypeButton extends StatelessWidget {
           borderRadius: BorderRadius.all(AppRadius.sm),
         ),
         child: Icon(icon, size: 16, color: isActive ? primary : mutedColor),
+      ),
+    );
+  }
+}
+
+class _CurvedToggle extends StatelessWidget {
+  const _CurvedToggle({required this.ref, required this.mutedColor});
+
+  final WidgetRef ref;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isCurved = ref.watch(lineCurvedProvider);
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return GestureDetector(
+      onTap: () =>
+          ref.read(lineCurvedProvider.notifier).state = !isCurved,
+      child: Container(
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: isCurved ? primary.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.all(AppRadius.sm),
+          border: Border.all(
+            color: isCurved ? primary : mutedColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.spline,
+              size: 14,
+              color: isCurved ? primary : mutedColor,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Curve',
+              style: TextStyle(
+                fontSize: 11,
+                color: isCurved ? primary : mutedColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

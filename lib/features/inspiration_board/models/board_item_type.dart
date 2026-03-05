@@ -4,6 +4,7 @@ enum BoardItemType {
   shape,
   stickyNote,
   text,
+  line,
   connector;
 
   static BoardItemType fromString(String value) => switch (value) {
@@ -12,6 +13,7 @@ enum BoardItemType {
         'shape' => BoardItemType.shape,
         'sticky_note' => BoardItemType.stickyNote,
         'text' => BoardItemType.text,
+        'line' => BoardItemType.line,
         'connector' => BoardItemType.connector,
         _ => BoardItemType.image,
       };
@@ -22,6 +24,7 @@ enum BoardItemType {
         BoardItemType.shape => 'shape',
         BoardItemType.stickyNote => 'sticky_note',
         BoardItemType.text => 'text',
+        BoardItemType.line => 'line',
         BoardItemType.connector => 'connector',
       };
 }
@@ -44,8 +47,10 @@ enum ShapeType {
 enum ToolMode {
   select,
   pen,
+  line,
   shape,
   text,
   stickyNote,
+  connector,
   eraser,
 }

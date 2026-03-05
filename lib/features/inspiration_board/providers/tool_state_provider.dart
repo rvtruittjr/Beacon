@@ -16,6 +16,21 @@ final shapeTypeProvider = StateProvider<ShapeType>((ref) => ShapeType.rectangle)
 final shapeFillColorProvider = StateProvider<String>((ref) => '#6C63FF');
 final shapeStrokeColorProvider = StateProvider<String>((ref) => '#FFFFFF');
 
+/// Line tool options.
+final lineColorProvider = StateProvider<String>((ref) => '#FFFFFF');
+final lineStrokeWidthProvider = StateProvider<double>((ref) => 2.0);
+final lineCurvedProvider = StateProvider<bool>((ref) => false);
+
+/// Connector options.
+final connectorColorProvider = StateProvider<String>((ref) => '#FFFFFF');
+
+/// First selected item ID for connector two-tap flow.
+final connectorSourceProvider = StateProvider<String?>((ref) => null);
+
+/// Active line preview (start + current end) while dragging.
+final activeLineStartProvider = StateProvider<Offset?>((ref) => null);
+final activeLineEndProvider = StateProvider<Offset?>((ref) => null);
+
 /// Sticky note default color.
 final stickyNoteColorProvider = StateProvider<String>((ref) => '#FFEB3B');
 
