@@ -36,19 +36,43 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
 
   String get _text => widget.item.data['text'] as String? ?? '';
   String get _bgHex => widget.item.data['bgColor'] as String? ?? '#FFEB3B';
+  String get _textColorHex =>
+      widget.item.data['textColor'] as String? ?? '#000000';
+  double get _fontSize =>
+      (widget.item.data['fontSize'] as num?)?.toDouble() ?? 14.0;
+  FontWeight get _fontWeight =>
+      (widget.item.data['fontWeight'] as String?) == 'bold'
+          ? FontWeight.bold
+          : FontWeight.w500;
+  FontStyle get _fontStyle =>
+      (widget.item.data['fontStyle'] as String?) == 'italic'
+          ? FontStyle.italic
+          : FontStyle.normal;
 
-  Color get _bgColor {
-    final clean = _bgHex.replaceFirst('#', '');
+  Color _hexToColor(String hex, Color fallback) {
+    final clean = hex.replaceFirst('#', '');
     if (clean.length == 6) {
       return Color(0xFF000000 | int.parse(clean, radix: 16));
     }
-    return const Color(0xFFFFEB3B);
+    return fallback;
   }
+
+  Color get _bgColor => _hexToColor(_bgHex, const Color(0xFFFFEB3B));
+  Color get _textColor => _hexToColor(_textColorHex, const Color(0xFF000000));
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: _text);
+  }
+
+  @override
+  void didUpdateWidget(StickyNoteItem old) {
+    super.didUpdateWidget(old);
+    if (old.item.data['text'] != widget.item.data['text'] &&
+        widget.item.data['text'] != _controller.text) {
+      _controller.text = _text;
+    }
   }
 
   @override
@@ -91,11 +115,11 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
                   controller: _controller,
                   focusNode: FocusNode(),
                   style: AppFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                  cursorColor: Colors.black54,
+                    fontSize: _fontSize,
+                    fontWeight: _fontWeight,
+                    color: _textColor,
+                  ).copyWith(fontStyle: _fontStyle),
+                  cursorColor: _textColor.withValues(alpha: 0.7),
                   backgroundCursorColor: Colors.grey,
                   maxLines: null,
                   onChanged: (val) {

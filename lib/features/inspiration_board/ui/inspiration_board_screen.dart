@@ -24,6 +24,7 @@ import 'widgets/connector_item.dart';
 import 'widgets/line_item.dart';
 import 'widgets/shape_item.dart';
 import 'widgets/sticky_note_item.dart';
+import 'widgets/text_format_bar.dart';
 import 'widgets/text_item.dart';
 
 class InspirationBoardScreen extends ConsumerStatefulWidget {
@@ -90,6 +91,16 @@ class _InspirationBoardScreenState
     });
 
     final boardItems = ref.watch(boardStateProvider);
+    final selId = ref.watch(selectedItemProvider);
+    final selectedTextItem = selId != null
+        ? boardItems
+            .where((i) =>
+                i.id == selId &&
+                (i.type == 'text' ||
+                    i.type == 'sticky_note' ||
+                    i.type == 'shape'))
+            .firstOrNull
+        : null;
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -209,6 +220,21 @@ class _InspirationBoardScreenState
                       ),
                     ),
 
+                    // Text format bar (shown when a text-containing item is selected)
+                    if (selectedTextItem != null)
+                      Positioned(
+                        bottom: AppSpacing.lg + 72,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: TextFormatBar(
+                            selectedItem: selectedTextItem,
+                            onDataChanged: (data) =>
+                                _updateData(selectedTextItem.id, data),
+                          ),
+                        ),
+                      ),
+
                     // Floating toolbar
                     Positioned(
                       bottom: AppSpacing.lg,
@@ -303,6 +329,7 @@ class _InspirationBoardScreenState
                 .resizeItem(item.id, dw, dh),
             onResizeEnd: () => _persistSize(item.id),
             onDelete: () => _deleteItem(item.id),
+            onDataChanged: (data) => _updateData(item.id, data),
           ),
         _ => BoardItem(
             key: ValueKey(item.id),
@@ -529,6 +556,9 @@ class _InspirationBoardScreenState
           'fillColor': fillColor,
           'strokeColor': strokeColor,
           'strokeWidth': 2.0,
+          'text': '',
+          'textColor': '#FFFFFF',
+          'fontSize': 14,
         },
       );
       ref.read(boardStateProvider.notifier).addItem(item);
@@ -559,6 +589,9 @@ class _InspirationBoardScreenState
           'fillColor': fillColor,
           'strokeColor': strokeColor,
           'strokeWidth': 2.0,
+          'text': '',
+          'textColor': '#FFFFFF',
+          'fontSize': 14,
         },
       );
       ref.read(boardStateProvider.notifier).addItem(item);

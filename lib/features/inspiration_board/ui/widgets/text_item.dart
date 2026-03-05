@@ -34,6 +34,19 @@ class _TextItemState extends ConsumerState<TextItem> {
   String get _colorHex => widget.item.data['color'] as String? ?? '#FFFFFF';
   double get _fontSize =>
       (widget.item.data['fontSize'] as num?)?.toDouble() ?? 18.0;
+  FontWeight get _fontWeight =>
+      (widget.item.data['fontWeight'] as String?) == 'bold'
+          ? FontWeight.w700
+          : FontWeight.w600;
+  FontStyle get _fontStyle =>
+      (widget.item.data['fontStyle'] as String?) == 'italic'
+          ? FontStyle.italic
+          : FontStyle.normal;
+  TextAlign get _textAlign => switch (widget.item.data['textAlign'] as String?) {
+        'center' => TextAlign.center,
+        'right' => TextAlign.right,
+        _ => TextAlign.left,
+      };
 
   Color get _color {
     final clean = _colorHex.replaceFirst('#', '');
@@ -47,6 +60,15 @@ class _TextItemState extends ConsumerState<TextItem> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: _text);
+  }
+
+  @override
+  void didUpdateWidget(TextItem old) {
+    super.didUpdateWidget(old);
+    if (old.item.data['text'] != widget.item.data['text'] &&
+        widget.item.data['text'] != _controller.text) {
+      _controller.text = _text;
+    }
   }
 
   @override
@@ -95,12 +117,13 @@ class _TextItemState extends ConsumerState<TextItem> {
                 focusNode: FocusNode(),
                 style: AppFonts.inter(
                   fontSize: _fontSize,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: _fontWeight,
                   color: _color,
-                ),
+                ).copyWith(fontStyle: _fontStyle),
                 cursorColor: _color,
                 backgroundCursorColor: Colors.grey,
                 maxLines: null,
+                textAlign: _textAlign,
                 onChanged: (val) {
                   widget.onDataChanged({...widget.item.data, 'text': val});
                 },

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
+import '../../../../core/config/app_fonts.dart';
 import '../../models/board_item_type.dart';
 import '../../models/inspiration_item_model.dart';
 import '../../providers/tool_state_provider.dart';
@@ -17,6 +18,7 @@ class ShapeItem extends ConsumerStatefulWidget {
     required this.onResized,
     required this.onResizeEnd,
     required this.onDelete,
+    this.onDataChanged,
   });
 
   final InspirationItemModel item;
@@ -25,6 +27,7 @@ class ShapeItem extends ConsumerStatefulWidget {
   final void Function(double dw, double dh) onResized;
   final VoidCallback onResizeEnd;
   final VoidCallback onDelete;
+  final void Function(Map<String, dynamic> data)? onDataChanged;
 
   @override
   ConsumerState<ShapeItem> createState() => _ShapeItemState();
@@ -32,6 +35,9 @@ class ShapeItem extends ConsumerStatefulWidget {
 
 class _ShapeItemState extends ConsumerState<ShapeItem> {
   bool _hovered = false;
+  bool _isEditing = false;
+  late TextEditingController _controller;
+  final FocusNode _textFocusNode = FocusNode();
 
   ShapeType get _shapeType =>
       ShapeType.fromString(widget.item.data['shapeType'] as String? ?? 'rectangle');
@@ -40,6 +46,24 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
       widget.item.data['strokeColor'] as String? ?? '#FFFFFF';
   double get _strokeWidth =>
       (widget.item.data['strokeWidth'] as num?)?.toDouble() ?? 2.0;
+
+  // Text fields
+  String get _text => widget.item.data['text'] as String? ?? '';
+  String get _textColorHex =>
+      widget.item.data['textColor'] as String? ?? '#FFFFFF';
+  double get _textFontSize =>
+      (widget.item.data['fontSize'] as num?)?.toDouble() ?? 14.0;
+  FontWeight get _fontWeight =>
+      (widget.item.data['fontWeight'] as String?) == 'bold'
+          ? FontWeight.bold
+          : FontWeight.w500;
+  FontStyle get _fontStyle =>
+      (widget.item.data['fontStyle'] as String?) == 'italic'
+          ? FontStyle.italic
+          : FontStyle.normal;
+
+  bool get _supportsText =>
+      _shapeType == ShapeType.rectangle || _shapeType == ShapeType.circle;
 
   Color _hexToColor(String hex) {
     final clean = hex.replaceFirst('#', '');
@@ -55,8 +79,36 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _text);
+    _textFocusNode.addListener(() {
+      if (!_textFocusNode.hasFocus && _isEditing) {
+        setState(() => _isEditing = false);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(ShapeItem old) {
+    super.didUpdateWidget(old);
+    if (old.item.data['text'] != widget.item.data['text'] &&
+        widget.item.data['text'] != _controller.text) {
+      _controller.text = _text;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _textFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final textColor = _hexToColor(_textColorHex);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -64,6 +116,12 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
       child: GestureDetector(
         onPanUpdate: (d) => widget.onMoved(d.delta.dx, d.delta.dy),
         onPanEnd: (_) => widget.onDragEnd(),
+        onDoubleTap: _supportsText && widget.onDataChanged != null
+            ? () {
+                setState(() => _isEditing = true);
+                _textFocusNode.requestFocus();
+              }
+            : null,
         child: SizedBox(
           width: widget.item.width,
           height: widget.item.height,
@@ -79,6 +137,62 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
                   strokeWidth: _strokeWidth,
                 ),
               ),
+              // Text overlay (centered inside shape)
+              if (_supportsText && (_text.isNotEmpty || _isEditing))
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    child: Center(
+                      child: _isEditing
+                          ? EditableText(
+                              controller: _controller,
+                              focusNode: _textFocusNode,
+                              style: AppFonts.inter(
+                                fontSize: _textFontSize,
+                                fontWeight: _fontWeight,
+                                color: textColor,
+                              ).copyWith(fontStyle: _fontStyle),
+                              cursorColor: textColor,
+                              backgroundCursorColor: Colors.grey,
+                              maxLines: null,
+                              textAlign: TextAlign.center,
+                              onChanged: (val) {
+                                widget.onDataChanged!(
+                                    {...widget.item.data, 'text': val});
+                              },
+                            )
+                          : Text(
+                              _text,
+                              style: AppFonts.inter(
+                                fontSize: _textFontSize,
+                                fontWeight: _fontWeight,
+                                color: textColor,
+                              ).copyWith(fontStyle: _fontStyle),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 4,
+                            ),
+                    ),
+                  ),
+                ),
+              // "Double-tap to type" hint when selected and empty
+              if (_supportsText &&
+                  _text.isEmpty &&
+                  !_isEditing &&
+                  _showHandles)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Center(
+                      child: Text(
+                        'Double-tap to type',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _hexToColor(_strokeHex).withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               // Selection border
               if (_showHandles)
                 Positioned.fill(
