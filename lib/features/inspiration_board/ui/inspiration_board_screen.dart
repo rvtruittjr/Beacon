@@ -467,8 +467,34 @@ class _InspirationBoardScreenState
     }
   }
 
+  /// Returns the first board item whose bounding box contains [pos], or null.
+  InspirationItemModel? _itemAtPosition(Offset pos) {
+    final items = ref.read(boardStateProvider);
+    for (final item in items.reversed) {
+      if (pos.dx >= item.posX &&
+          pos.dx <= item.posX + item.width &&
+          pos.dy >= item.posY &&
+          pos.dy <= item.posY + item.height) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   void _onCanvasTap(TapUpDetails d, ToolMode tool) {
     final pos = d.localPosition;
+
+    // For creation tools, check if tap hits an existing item first → select it
+    if (tool == ToolMode.text ||
+        tool == ToolMode.stickyNote ||
+        tool == ToolMode.shape) {
+      final hitItem = _itemAtPosition(pos);
+      if (hitItem != null) {
+        ref.read(selectedItemProvider.notifier).state = hitItem.id;
+        return;
+      }
+    }
+
     switch (tool) {
       case ToolMode.text:
         _createTextItem(pos.dx, pos.dy);
@@ -504,6 +530,7 @@ class _InspirationBoardScreenState
         data: {'text': '', 'bgColor': noteColor, 'textColor': '#000000'},
       );
       ref.read(boardStateProvider.notifier).addItem(item);
+      ref.read(selectedItemProvider.notifier).state = item.id;
     } catch (e) {
       _showError('Failed to add sticky note: $e');
     }
@@ -525,6 +552,7 @@ class _InspirationBoardScreenState
         data: {'text': 'Text', 'color': '#FFFFFF', 'fontSize': 18},
       );
       ref.read(boardStateProvider.notifier).addItem(item);
+      ref.read(selectedItemProvider.notifier).state = item.id;
     } catch (e) {
       _showError('Failed to add text: $e');
     }
