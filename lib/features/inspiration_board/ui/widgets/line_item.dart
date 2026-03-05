@@ -26,13 +26,16 @@ class LineItem extends StatefulWidget {
 
 class _LineItemState extends State<LineItem> {
   bool _hovered = false;
+  bool _dragging = false;
 
   double get _x1 => (widget.item.data['x1'] as num?)?.toDouble() ?? 0;
   double get _y1 => (widget.item.data['y1'] as num?)?.toDouble() ?? 0;
   double get _x2 => (widget.item.data['x2'] as num?)?.toDouble() ?? 100;
   double get _y2 => (widget.item.data['y2'] as num?)?.toDouble() ?? 100;
-  double get _cx => (widget.item.data['cx'] as num?)?.toDouble() ?? (_x1 + _x2) / 2;
-  double get _cy => (widget.item.data['cy'] as num?)?.toDouble() ?? (_y1 + _y2) / 2;
+  double get _cx =>
+      (widget.item.data['cx'] as num?)?.toDouble() ?? (_x1 + _x2) / 2;
+  double get _cy =>
+      (widget.item.data['cy'] as num?)?.toDouble() ?? (_y1 + _y2) / 2;
   bool get _curved => widget.item.data['curved'] == true;
   String get _colorHex => widget.item.data['color'] as String? ?? '#FFFFFF';
   double get _strokeWidth =>
@@ -46,21 +49,18 @@ class _LineItemState extends State<LineItem> {
     return const Color(0xFFFFFFFF);
   }
 
-  // Bounding box for the line (with padding for handles)
-  double get _minX => [_x1, _x2, if (_curved) _cx].reduce(math.min) - 12;
-  double get _minY => [_y1, _y2, if (_curved) _cy].reduce(math.min) - 12;
-  double get _maxX => [_x1, _x2, if (_curved) _cx].reduce(math.max) + 12;
-  double get _maxY => [_y1, _y2, if (_curved) _cy].reduce(math.max) + 12;
+  bool get _showHandles => _hovered || _dragging;
 
-  void _updateEndpoint(String key, double x, double y) {
-    widget.onDataChanged({
-      ...widget.item.data,
-      key == 'p1' ? 'x1' : (key == 'p2' ? 'x2' : 'cx'):
-          key == 'p1' ? x : (key == 'p2' ? x : x),
-      key == 'p1' ? 'y1' : (key == 'p2' ? 'y2' : 'cy'):
-          key == 'p1' ? y : (key == 'p2' ? y : y),
-    });
-  }
+  // Bounding box with generous padding so handles don't clip
+  static const _pad = 30.0;
+  double get _minX =>
+      [_x1, _x2, if (_curved) _cx].reduce(math.min) - _pad;
+  double get _minY =>
+      [_y1, _y2, if (_curved) _cy].reduce(math.min) - _pad;
+  double get _maxX =>
+      [_x1, _x2, if (_curved) _cx].reduce(math.max) + _pad;
+  double get _maxY =>
+      [_y1, _y2, if (_curved) _cy].reduce(math.max) + _pad;
 
   void _moveEndpoint(String key, double dx, double dy) {
     final data = {...widget.item.data};
@@ -77,6 +77,14 @@ class _LineItemState extends State<LineItem> {
     widget.onDataChanged(data);
   }
 
+  void _onDragStart() {
+    setState(() => _dragging = true);
+  }
+
+  void _onDragEnd() {
+    setState(() => _dragging = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = _maxX - _minX;
@@ -87,11 +95,14 @@ class _LineItemState extends State<LineItem> {
       top: _minY,
       child: MouseRegion(
         onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
+        onExit: (_) {
+          if (!_dragging) setState(() => _hovered = false);
+        },
         child: SizedBox(
           width: w,
           height: h,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               // Line painting
               CustomPaint(
@@ -109,23 +120,29 @@ class _LineItemState extends State<LineItem> {
                 ),
               ),
 
-              // Endpoint handles (on hover)
-              if (_hovered) ...[
+              // Endpoint handles
+              if (_showHandles) ...[
                 _DragHandle(
                   x: _x1 - _minX,
                   y: _y1 - _minY,
                   onDrag: (dx, dy) => _moveEndpoint('p1', dx, dy),
+                  onDragStart: _onDragStart,
+                  onDragEnd: _onDragEnd,
                 ),
                 _DragHandle(
                   x: _x2 - _minX,
                   y: _y2 - _minY,
                   onDrag: (dx, dy) => _moveEndpoint('p2', dx, dy),
+                  onDragStart: _onDragStart,
+                  onDragEnd: _onDragEnd,
                 ),
                 if (_curved)
                   _DragHandle(
                     x: _cx - _minX,
                     y: _cy - _minY,
                     onDrag: (dx, dy) => _moveEndpoint('ctrl', dx, dy),
+                    onDragStart: _onDragStart,
+                    onDragEnd: _onDragEnd,
                     isCurveHandle: true,
                   ),
                 // Delete button at midpoint
@@ -141,7 +158,8 @@ class _LineItemState extends State<LineItem> {
                         color: AppColors.error,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                      child: const Icon(Icons.close,
+                          size: 14, color: Colors.white),
                     ),
                   ),
                 ),
@@ -159,32 +177,51 @@ class _DragHandle extends StatelessWidget {
     required this.x,
     required this.y,
     required this.onDrag,
+    required this.onDragStart,
+    required this.onDragEnd,
     this.isCurveHandle = false,
   });
 
   final double x;
   final double y;
   final void Function(double dx, double dy) onDrag;
+  final VoidCallback onDragStart;
+  final VoidCallback onDragEnd;
   final bool isCurveHandle;
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    final size = isCurveHandle ? 10.0 : 12.0;
+    final visualSize = isCurveHandle ? 10.0 : 12.0;
+    // Larger hit area so it's easy to grab
+    const hitSize = 28.0;
 
     return Positioned(
-      left: x - size / 2,
-      top: y - size / 2,
+      left: x - hitSize / 2,
+      top: y - hitSize / 2,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanStart: (_) => onDragStart(),
         onPanUpdate: (d) => onDrag(d.delta.dx, d.delta.dy),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: isCurveHandle ? BoxShape.rectangle : BoxShape.circle,
-            borderRadius: isCurveHandle ? BorderRadius.all(Radius.circular(3)) : null,
-            border: Border.all(color: primary, width: 2),
+        onPanEnd: (_) => onDragEnd(),
+        onPanCancel: onDragEnd,
+        child: SizedBox(
+          width: hitSize,
+          height: hitSize,
+          child: Center(
+            child: Container(
+              width: visualSize,
+              height: visualSize,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape:
+                    isCurveHandle ? BoxShape.rectangle : BoxShape.circle,
+                borderRadius: isCurveHandle
+                    ? const BorderRadius.all(Radius.circular(3))
+                    : null,
+                border: Border.all(color: primary, width: 2),
+              ),
+            ),
           ),
         ),
       ),
