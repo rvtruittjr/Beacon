@@ -23,6 +23,7 @@ import '../../features/sharing/ui/public_brand_kit_screen.dart';
 import '../../features/brand_changelog/ui/changelog_screen.dart';
 import '../../features/inspiration_board/ui/inspiration_board_screen.dart';
 import '../../features/social_media_kit/ui/social_media_kit_screen.dart';
+import '../../features/social_media_kit/ui/social_kit_editor_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../features/settings/ui/subscription_screen.dart';
 import '../../shared/widgets/platform_adaptive/adaptive_scaffold.dart';
@@ -130,6 +131,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/app/social-kit',
             pageBuilder: (context, state) =>
                 _fadeSlide(state, const SocialMediaKitScreen()),
+          ),
+          GoRoute(
+            path: '/app/social-kit/edit/:presetKey',
+            pageBuilder: (context, state) => _fadeSlide(
+              state,
+              SocialKitEditorScreen(
+                presetKey: state.pathParameters['presetKey']!,
+              ),
+            ),
           ),
           GoRoute(
             path: '/app/archive',

@@ -45,6 +45,7 @@ class _BoardItemState extends State<BoardItem> {
 
   Future<void> _resolveUrl() async {
     final url = widget.item.imageUrl;
+    if (url == null || url.isEmpty) return;
     // If it's a Supabase storage URL, get a signed URL
     if (url.contains('supabase') && url.contains('brand-assets')) {
       final signed = await StorageService.toSignedUrl(url);

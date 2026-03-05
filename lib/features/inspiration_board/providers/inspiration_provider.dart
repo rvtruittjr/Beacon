@@ -45,6 +45,13 @@ class BoardStateNotifier extends StateNotifier<List<InspirationItemModel>> {
     ];
   }
 
+  void updateItemData(String id, Map<String, dynamic> data) {
+    state = [
+      for (final item in state)
+        if (item.id == id) item.copyWith(data: data) else item,
+    ];
+  }
+
   void removeItem(String id) {
     state = state.where((i) => i.id != id).toList();
   }

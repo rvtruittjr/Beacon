@@ -16,6 +16,7 @@ class PlatformPreset {
     this.icon,
   );
 
+  String get key => '${platform}_$variant';
   String get displaySize => '${width}x$height';
   String get fileName =>
       '${platform.toLowerCase().replaceAll('/', '_')}_${variant.toLowerCase()}.png';

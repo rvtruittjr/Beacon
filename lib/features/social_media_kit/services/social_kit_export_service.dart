@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:archive/archive.dart';
 
 import '../models/platform_preset.dart';
+import '../models/social_kit_edit_state.dart';
 import '../../brand_snapshot/services/pdf_export_service.dart';
 import 'social_image_renderer.dart';
 
@@ -15,6 +16,7 @@ class SocialKitExportService {
     required String brandName,
     required String primaryColorHex,
     String? logoUrl,
+    Map<String, SocialKitEditState> edits = const {},
   }) async {
     final archive = Archive();
     final bgColor = _hexToColor(primaryColorHex);
@@ -28,12 +30,28 @@ class SocialKitExportService {
     }
 
     for (final preset in PlatformPreset.all) {
+      final edit = edits[preset.key];
+      final effectiveBg = (edit != null && edit.bgColorHex.isNotEmpty)
+          ? _hexToColor(edit.bgColorHex)
+          : bgColor;
+      final effectiveTextColor = (edit != null && edit.textColorHex.isNotEmpty)
+          ? _hexToColor(edit.textColorHex)
+          : null;
+
       final pngBytes = await SocialImageRenderer.render(
         width: preset.width,
         height: preset.height,
-        backgroundColor: bgColor,
+        backgroundColor: effectiveBg,
         logoBytes: logoBytes,
         brandName: brandName,
+        logoOffsetX: edit?.logoOffsetX ?? 0.0,
+        logoOffsetY: edit?.logoOffsetY ?? 0.0,
+        logoScale: edit?.logoScale ?? 1.0,
+        textOverride: (edit != null && edit.textContent.isNotEmpty)
+            ? edit.textContent
+            : null,
+        fontSizeMultiplier: edit?.fontSizeMultiplier ?? 1.0,
+        textColorOverride: effectiveTextColor,
       );
       if (pngBytes != null) {
         archive.addFile(ArchiveFile(
@@ -54,8 +72,15 @@ class SocialKitExportService {
     required String brandName,
     required String primaryColorHex,
     String? logoUrl,
+    SocialKitEditState? edit,
   }) async {
-    final bgColor = _hexToColor(primaryColorHex);
+    final bgColor = (edit != null && edit.bgColorHex.isNotEmpty)
+        ? _hexToColor(edit.bgColorHex)
+        : _hexToColor(primaryColorHex);
+
+    final textColor = (edit != null && edit.textColorHex.isNotEmpty)
+        ? _hexToColor(edit.textColorHex)
+        : null;
 
     Uint8List? logoBytes;
     if (logoUrl != null && logoUrl.isNotEmpty) {
@@ -70,6 +95,13 @@ class SocialKitExportService {
       backgroundColor: bgColor,
       logoBytes: logoBytes,
       brandName: brandName,
+      logoOffsetX: edit?.logoOffsetX ?? 0.0,
+      logoOffsetY: edit?.logoOffsetY ?? 0.0,
+      logoScale: edit?.logoScale ?? 1.0,
+      textOverride:
+          (edit != null && edit.textContent.isNotEmpty) ? edit.textContent : null,
+      fontSizeMultiplier: edit?.fontSizeMultiplier ?? 1.0,
+      textColorOverride: textColor,
     );
   }
 

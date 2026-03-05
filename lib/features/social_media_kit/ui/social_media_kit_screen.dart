@@ -3,6 +3,7 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/design_tokens.dart';
 import '../../../core/config/app_fonts.dart';
@@ -10,6 +11,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../models/platform_preset.dart';
+import '../providers/social_kit_edit_provider.dart';
 import '../providers/social_kit_provider.dart';
 import '../services/social_kit_export_service.dart';
 import 'widgets/platform_card.dart';
@@ -31,15 +33,17 @@ class _SocialMediaKitScreenState
     PlatformPreset preset,
     SocialKitData data,
   ) async {
-    final key = '${preset.platform}_${preset.variant}';
+    final key = preset.key;
     setState(() => _generating.add(key));
 
     try {
+      final edit = ref.read(socialKitEditProvider)[key];
       final bytes = await SocialKitExportService.generateSingle(
         preset: preset,
         brandName: data.brandName,
         primaryColorHex: data.primaryColorHex,
         logoUrl: data.logoUrl,
+        edit: edit,
       );
       if (bytes == null) return;
 
@@ -67,10 +71,12 @@ class _SocialMediaKitScreenState
         ),
       );
 
+      final edits = ref.read(socialKitEditProvider);
       final zipBytes = await SocialKitExportService.generateZip(
         brandName: data.brandName,
         primaryColorHex: data.primaryColorHex,
         logoUrl: data.logoUrl,
+        edits: edits,
       );
 
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -175,6 +181,8 @@ class _SocialMediaKitScreenState
                     data: data,
                     generating: _generating,
                     onDownload: (preset) => _downloadSingle(preset, data),
+                    onEdit: (preset) =>
+                        context.go('/app/social-kit/edit/${preset.key}'),
                   );
                 }).toList(),
               );
@@ -193,6 +201,7 @@ class _PlatformSection extends StatelessWidget {
     required this.data,
     required this.generating,
     required this.onDownload,
+    required this.onEdit,
   });
 
   final String platform;
@@ -200,6 +209,7 @@ class _PlatformSection extends StatelessWidget {
   final SocialKitData data;
   final Set<String> generating;
   final void Function(PlatformPreset) onDownload;
+  final void Function(PlatformPreset) onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +250,6 @@ class _PlatformSection extends StatelessWidget {
                 spacing: AppSpacing.md,
                 runSpacing: AppSpacing.md,
                 children: presets.map((preset) {
-                  final key = '${preset.platform}_${preset.variant}';
                   final cardWidth =
                       (constraints.maxWidth - (cols - 1) * AppSpacing.md) /
                           cols;
@@ -248,8 +257,9 @@ class _PlatformSection extends StatelessWidget {
                     width: cardWidth,
                     child: PlatformCard(
                       preset: preset,
-                      isGenerating: generating.contains(key),
+                      isGenerating: generating.contains(preset.key),
                       onDownload: () => onDownload(preset),
+                      onEdit: () => onEdit(preset),
                     ),
                   );
                 }).toList(),

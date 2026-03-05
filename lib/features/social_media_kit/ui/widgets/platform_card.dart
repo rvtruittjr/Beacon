@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../models/platform_preset.dart';
+import 'preview_thumbnail.dart';
 
 class PlatformCard extends StatelessWidget {
   const PlatformCard({
     super.key,
     required this.preset,
     required this.onDownload,
+    required this.onEdit,
     this.isGenerating = false,
   });
 
   final PlatformPreset preset;
   final VoidCallback onDownload;
+  final VoidCallback onEdit;
   final bool isGenerating;
 
   @override
@@ -41,21 +45,15 @@ class PlatformCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Aspect ratio preview box
-          AspectRatio(
-            aspectRatio: aspectRatio.clamp(0.5, 3.0),
-            child: Container(
-              color: (isDark ? AppColors.surfaceMidDark : AppColors.surfaceMidLight),
-              child: Center(
-                child: Icon(
-                  preset.icon,
-                  size: 32,
-                  color: mutedColor,
-                ),
-              ),
+          // Live preview thumbnail
+          GestureDetector(
+            onTap: onEdit,
+            child: AspectRatio(
+              aspectRatio: aspectRatio.clamp(0.5, 3.0),
+              child: PreviewThumbnail(preset: preset),
             ),
           ),
-          // Info + download
+          // Info + buttons
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
@@ -75,13 +73,29 @@ class PlatformCard extends StatelessWidget {
                   style: AppFonts.inter(fontSize: 12, color: mutedColor),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                AppButton(
-                  label: 'Download',
-                  icon: Icons.download,
-                  variant: AppButtonVariant.secondary,
-                  isLoading: isGenerating,
-                  onPressed: isGenerating ? null : onDownload,
-                  isFullWidth: true,
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Edit',
+                        icon: LucideIcons.pencil,
+                        variant: AppButtonVariant.secondary,
+                        onPressed: onEdit,
+                        isFullWidth: true,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Download',
+                        icon: Icons.download,
+                        variant: AppButtonVariant.secondary,
+                        isLoading: isGenerating,
+                        onPressed: isGenerating ? null : onDownload,
+                        isFullWidth: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
