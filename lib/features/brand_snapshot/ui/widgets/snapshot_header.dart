@@ -33,72 +33,71 @@ class SnapshotHeader extends StatelessWidget {
         color: context.beacon.sidebarBg,
         borderRadius: BorderRadius.all(AppRadius.xl),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Brand info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  brand.name,
-                  style: AppFonts.clashDisplay(
-                    fontSize: 36,
-                    color: context.beacon.sidebarText,
-                  ),
+          Text(
+            brand.name,
+            style: AppFonts.clashDisplay(
+              fontSize: 36,
+              color: context.beacon.sidebarText,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (brand.description != null &&
+              brand.description!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                brand.description!,
+                style: AppFonts.inter(
+                  fontSize: 14,
+                  color: context.beacon.sidebarMuted,
                 ),
-                if (brand.description != null &&
-                    brand.description!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      brand.description!,
-                      style: AppFonts.inter(
-                        fontSize: 14,
-                        color: context.beacon.sidebarMuted,
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Last updated ${brand.createdAt.timeAgo()}',
-                  style: AppFonts.inter(
-                    fontSize: 12,
-                    color: context.beacon.sidebarMuted,
-                  ),
-                ),
-              ],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Last updated ${brand.createdAt.timeAgo()}',
+            style: AppFonts.inter(
+              fontSize: 12,
+              color: context.beacon.sidebarMuted,
             ),
           ),
-          AppButton(
-            label: null,
-            icon: LucideIcons.pencil,
-            variant: AppButtonVariant.icon,
-            onPressed: () => EditBrandDialog.show(context, brand),
-          ),
-          if (onExportPdf != null) ...[
-            const SizedBox(width: AppSpacing.xs),
-            AppButton(
-              label: null,
-              icon: LucideIcons.fileText,
-              variant: AppButtonVariant.icon,
-              onPressed: onExportPdf,
-            ),
-          ],
-          if (onExportZip != null) ...[
-            const SizedBox(width: AppSpacing.xs),
-            AppButton(
-              label: null,
-              icon: LucideIcons.archive,
-              variant: AppButtonVariant.icon,
-              onPressed: onExportZip,
-            ),
-          ],
-          const SizedBox(width: AppSpacing.xs),
-          AppButton(
-            label: 'Share',
-            icon: LucideIcons.share2,
-            onPressed: () => context.go('/app/sharing'),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              AppButton(
+                label: null,
+                icon: LucideIcons.pencil,
+                variant: AppButtonVariant.icon,
+                onPressed: () => EditBrandDialog.show(context, brand),
+              ),
+              if (onExportPdf != null)
+                AppButton(
+                  label: null,
+                  icon: LucideIcons.fileText,
+                  variant: AppButtonVariant.icon,
+                  onPressed: onExportPdf,
+                ),
+              if (onExportZip != null)
+                AppButton(
+                  label: null,
+                  icon: LucideIcons.archive,
+                  variant: AppButtonVariant.icon,
+                  onPressed: onExportZip,
+                ),
+              AppButton(
+                label: 'Share',
+                icon: LucideIcons.share2,
+                onPressed: () => context.go('/app/sharing'),
+              ),
+            ],
           ),
         ],
       ),

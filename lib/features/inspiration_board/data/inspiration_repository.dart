@@ -32,6 +32,7 @@ class InspirationRepository {
   }) async {
     final payload = <String, dynamic>{
       'brand_id': brandId,
+      'image_url': imageUrl ?? '',
       'caption': caption,
       'pos_x': posX,
       'pos_y': posY,
@@ -40,7 +41,6 @@ class InspirationRepository {
       'type': type,
       'data': jsonEncode(data),
     };
-    if (imageUrl != null) payload['image_url'] = imageUrl;
 
     final response = await SupabaseService.client
         .from('inspiration_items')
