@@ -265,10 +265,33 @@ class _InspirationBoardScreenState
           ),
       };
 
+      final connectorSource = ref.watch(connectorSourceProvider);
+      final isConnectorSource = connectorSource == item.id;
+
       return Positioned(
         left: item.posX,
         top: item.posY,
-        child: child,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            child,
+            // Blue ring highlight when this item is selected as connector source
+            if (isConnectorSource)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: const Color(0xFF2196F3),
+                        width: 3,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       );
     }).toList();
   }
@@ -522,13 +545,27 @@ class _InspirationBoardScreenState
   }
 
   InspirationItemModel? _findNearestItem(double x, double y) {
-    const threshold = 80.0;
     final items = ref.read(boardStateProvider);
+
+    // First: check if tap is inside any item's bounding box (with padding)
+    const padding = 10.0;
+    for (final item in items) {
+      if (item.type == 'drawing' || item.type == 'line' || item.type == 'connector') {
+        continue;
+      }
+      if (x >= item.posX - padding &&
+          x <= item.posX + item.width + padding &&
+          y >= item.posY - padding &&
+          y <= item.posY + item.height + padding) {
+        return item;
+      }
+    }
+
+    // Fallback: nearest center within 120px
+    const threshold = 120.0;
     InspirationItemModel? nearest;
     double minDist = double.infinity;
-
     for (final item in items) {
-      // Skip non-visual items
       if (item.type == 'drawing' || item.type == 'line' || item.type == 'connector') {
         continue;
       }
@@ -540,7 +577,6 @@ class _InspirationBoardScreenState
         nearest = item;
       }
     }
-
     if (minDist > threshold * threshold) return null;
     return nearest;
   }
