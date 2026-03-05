@@ -352,10 +352,9 @@ class _InspirationBoardScreenState
         left: item.posX,
         top: item.posY,
         child: GestureDetector(
-          // Tap item in select mode → select it
-          onTap: activeTool == ToolMode.select
-              ? () => ref.read(selectedItemProvider.notifier).state = item.id
-              : null,
+          // Tap item → always select it (enables format bar in any tool mode)
+          onTap: () =>
+              ref.read(selectedItemProvider.notifier).state = item.id,
           child: Stack(
             clipBehavior: Clip.none,
             children: [

@@ -33,6 +33,7 @@ class StickyNoteItem extends ConsumerStatefulWidget {
 class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   bool _hovered = false;
   late TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
 
   String get _text => widget.item.data['text'] as String? ?? '';
   String get _bgHex => widget.item.data['bgColor'] as String? ?? '#FFEB3B';
@@ -64,6 +65,11 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: _text);
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        ref.read(selectedItemProvider.notifier).state = widget.item.id;
+      }
+    });
   }
 
   @override
@@ -78,6 +84,7 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -111,17 +118,21 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
-                child: EditableText(
+                child: TextField(
                   controller: _controller,
-                  focusNode: FocusNode(),
+                  focusNode: _focusNode,
                   style: AppFonts.inter(
                     fontSize: _fontSize,
                     fontWeight: _fontWeight,
                     color: _textColor,
                   ).copyWith(fontStyle: _fontStyle),
                   cursorColor: _textColor.withValues(alpha: 0.7),
-                  backgroundCursorColor: Colors.grey,
                   maxLines: null,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
                   onChanged: (val) {
                     widget.onDataChanged({...widget.item.data, 'text': val});
                   },

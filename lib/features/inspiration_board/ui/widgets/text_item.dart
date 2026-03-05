@@ -29,6 +29,7 @@ class TextItem extends ConsumerStatefulWidget {
 class _TextItemState extends ConsumerState<TextItem> {
   bool _hovered = false;
   late TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
 
   String get _text => widget.item.data['text'] as String? ?? 'Text';
   String get _colorHex => widget.item.data['color'] as String? ?? '#FFFFFF';
@@ -60,6 +61,11 @@ class _TextItemState extends ConsumerState<TextItem> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: _text);
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        ref.read(selectedItemProvider.notifier).state = widget.item.id;
+      }
+    });
   }
 
   @override
@@ -74,6 +80,7 @@ class _TextItemState extends ConsumerState<TextItem> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -95,7 +102,7 @@ class _TextItemState extends ConsumerState<TextItem> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Selection underline
+            // Selection border
             if (_showHandles)
               Positioned(
                 left: -4,
@@ -112,18 +119,22 @@ class _TextItemState extends ConsumerState<TextItem> {
                 ),
               ),
             IntrinsicWidth(
-              child: EditableText(
+              child: TextField(
                 controller: _controller,
-                focusNode: FocusNode(),
+                focusNode: _focusNode,
                 style: AppFonts.inter(
                   fontSize: _fontSize,
                   fontWeight: _fontWeight,
                   color: _color,
                 ).copyWith(fontStyle: _fontStyle),
                 cursorColor: _color,
-                backgroundCursorColor: Colors.grey,
                 maxLines: null,
                 textAlign: _textAlign,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
                 onChanged: (val) {
                   widget.onDataChanged({...widget.item.data, 'text': val});
                 },

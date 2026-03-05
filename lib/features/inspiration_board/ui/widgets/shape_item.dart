@@ -83,7 +83,9 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
     super.initState();
     _controller = TextEditingController(text: _text);
     _textFocusNode.addListener(() {
-      if (!_textFocusNode.hasFocus && _isEditing) {
+      if (_textFocusNode.hasFocus) {
+        ref.read(selectedItemProvider.notifier).state = widget.item.id;
+      } else if (_isEditing) {
         setState(() => _isEditing = false);
       }
     });
@@ -144,7 +146,7 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     child: Center(
                       child: _isEditing
-                          ? EditableText(
+                          ? TextField(
                               controller: _controller,
                               focusNode: _textFocusNode,
                               style: AppFonts.inter(
@@ -153,9 +155,13 @@ class _ShapeItemState extends ConsumerState<ShapeItem> {
                                 color: textColor,
                               ).copyWith(fontStyle: _fontStyle),
                               cursorColor: textColor,
-                              backgroundCursorColor: Colors.grey,
                               maxLines: null,
                               textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
                               onChanged: (val) {
                                 widget.onDataChanged!(
                                     {...widget.item.data, 'text': val});
