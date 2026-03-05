@@ -28,6 +28,7 @@ class TextItem extends ConsumerStatefulWidget {
 
 class _TextItemState extends ConsumerState<TextItem> {
   bool _hovered = false;
+  bool _isEditing = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
 
@@ -64,6 +65,8 @@ class _TextItemState extends ConsumerState<TextItem> {
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         ref.read(selectedItemProvider.notifier).state = widget.item.id;
+      } else if (_isEditing) {
+        setState(() => _isEditing = false);
       }
     });
   }
@@ -92,13 +95,22 @@ class _TextItemState extends ConsumerState<TextItem> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final textStyle = AppFonts.inter(
+      fontSize: _fontSize,
+      fontWeight: _fontWeight,
+      color: _color,
+    ).copyWith(fontStyle: _fontStyle);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onPanUpdate: (d) => widget.onMoved(d.delta.dx, d.delta.dy),
-        onPanEnd: (_) => widget.onDragEnd(),
+        onPanUpdate: _isEditing ? null : (d) => widget.onMoved(d.delta.dx, d.delta.dy),
+        onPanEnd: _isEditing ? null : (_) => widget.onDragEnd(),
+        onDoubleTap: () {
+          setState(() => _isEditing = true);
+          _focusNode.requestFocus();
+        },
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -119,26 +131,31 @@ class _TextItemState extends ConsumerState<TextItem> {
                 ),
               ),
             IntrinsicWidth(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                style: AppFonts.inter(
-                  fontSize: _fontSize,
-                  fontWeight: _fontWeight,
-                  color: _color,
-                ).copyWith(fontStyle: _fontStyle),
-                cursorColor: _color,
-                maxLines: null,
-                textAlign: _textAlign,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                onChanged: (val) {
-                  widget.onDataChanged({...widget.item.data, 'text': val});
-                },
-              ),
+              child: _isEditing
+                  ? TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      style: textStyle,
+                      cursorColor: _color,
+                      maxLines: null,
+                      textAlign: _textAlign,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (val) {
+                        widget.onDataChanged({...widget.item.data, 'text': val});
+                      },
+                    )
+                  : ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 40),
+                      child: Text(
+                        _text,
+                        style: textStyle,
+                        textAlign: _textAlign,
+                      ),
+                    ),
             ),
             if (_showHandles)
               Positioned(

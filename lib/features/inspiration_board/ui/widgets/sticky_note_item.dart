@@ -32,6 +32,7 @@ class StickyNoteItem extends ConsumerStatefulWidget {
 
 class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   bool _hovered = false;
+  bool _isEditing = false;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
 
@@ -68,6 +69,8 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         ref.read(selectedItemProvider.notifier).state = widget.item.id;
+      } else if (_isEditing) {
+        setState(() => _isEditing = false);
       }
     });
   }
@@ -96,13 +99,22 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final textStyle = AppFonts.inter(
+      fontSize: _fontSize,
+      fontWeight: _fontWeight,
+      color: _textColor,
+    ).copyWith(fontStyle: _fontStyle);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onPanUpdate: (d) => widget.onMoved(d.delta.dx, d.delta.dy),
-        onPanEnd: (_) => widget.onDragEnd(),
+        onPanUpdate: _isEditing ? null : (d) => widget.onMoved(d.delta.dx, d.delta.dy),
+        onPanEnd: _isEditing ? null : (_) => widget.onDragEnd(),
+        onDoubleTap: () {
+          setState(() => _isEditing = true);
+          _focusNode.requestFocus();
+        },
         child: Container(
           width: widget.item.width,
           height: widget.item.height,
@@ -118,25 +130,31 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  style: AppFonts.inter(
-                    fontSize: _fontSize,
-                    fontWeight: _fontWeight,
-                    color: _textColor,
-                  ).copyWith(fontStyle: _fontStyle),
-                  cursorColor: _textColor.withValues(alpha: 0.7),
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onChanged: (val) {
-                    widget.onDataChanged({...widget.item.data, 'text': val});
-                  },
-                ),
+                child: _isEditing
+                    ? TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        style: textStyle,
+                        cursorColor: _textColor.withValues(alpha: 0.7),
+                        maxLines: null,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onChanged: (val) {
+                          widget.onDataChanged(
+                              {...widget.item.data, 'text': val});
+                        },
+                      )
+                    : Text(
+                        _text.isEmpty ? 'Double-tap to type' : _text,
+                        style: _text.isEmpty
+                            ? textStyle.copyWith(
+                                color: _textColor.withValues(alpha: 0.4))
+                            : textStyle,
+                        maxLines: null,
+                      ),
               ),
               if (_showHandles)
                 Positioned(
@@ -151,7 +169,8 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
                         color: AppColors.error,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                      child: const Icon(Icons.close,
+                          size: 14, color: Colors.white),
                     ),
                   ),
                 ),
@@ -178,7 +197,8 @@ class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
                               topLeft: Radius.circular(8),
                             ),
                           ),
-                          child: const Icon(Icons.drag_handle, size: 10, color: Colors.white),
+                          child: const Icon(Icons.drag_handle,
+                              size: 10, color: Colors.white),
                         ),
                       ),
                     ),

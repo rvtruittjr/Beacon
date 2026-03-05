@@ -74,18 +74,25 @@ class _InspirationBoardScreenState
     // Sync DB items into local board state on first load
     itemsAsync.whenData((items) {
       if (!_initialized) {
+        _initialized = true;
         Future.microtask(() {
           ref.read(boardStateProvider.notifier).setItems(items);
           // Extract drawing strokes from drawing-type items
-          _drawingStrokes.clear();
+          final strokes = <DrawingStroke>[];
           for (final item in items) {
             if (item.type == 'drawing') {
               try {
-                _drawingStrokes.add(DrawingStroke.fromJson(item.data));
+                strokes.add(DrawingStroke.fromJson(item.data));
               } catch (_) {}
             }
           }
-          _initialized = true;
+          if (mounted) {
+            setState(() {
+              _drawingStrokes
+                ..clear()
+                ..addAll(strokes);
+            });
+          }
         });
       }
     });
@@ -134,8 +141,9 @@ class _InspirationBoardScreenState
               loading: () => const LoadingIndicator(),
               error: (_, __) =>
                   const Center(child: Text('Failed to load board')),
-              data: (_) {
-                if (boardItems.isEmpty && _initialized && _drawingStrokes.isEmpty) {
+              data: (dbItems) {
+                // Use DB items for empty check (boardState may lag behind by a frame)
+                if (dbItems.isEmpty && boardItems.isEmpty && _drawingStrokes.isEmpty) {
                   return EmptyState(
                     blockColor: AppColors.blockCoral,
                     icon: Icons.dashboard_outlined,
