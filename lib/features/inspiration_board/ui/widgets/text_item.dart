@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../models/inspiration_item_model.dart';
+import '../../providers/tool_state_provider.dart';
 
-class TextItem extends StatefulWidget {
+class TextItem extends ConsumerStatefulWidget {
   const TextItem({
     super.key,
     required this.item,
@@ -21,10 +23,10 @@ class TextItem extends StatefulWidget {
   final void Function(Map<String, dynamic> data) onDataChanged;
 
   @override
-  State<TextItem> createState() => _TextItemState();
+  ConsumerState<TextItem> createState() => _TextItemState();
 }
 
-class _TextItemState extends State<TextItem> {
+class _TextItemState extends ConsumerState<TextItem> {
   bool _hovered = false;
   late TextEditingController _controller;
 
@@ -53,8 +55,15 @@ class _TextItemState extends State<TextItem> {
     super.dispose();
   }
 
+  bool get _showHandles {
+    final selected = ref.watch(selectedItemProvider);
+    return _hovered || selected == widget.item.id;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -62,7 +71,24 @@ class _TextItemState extends State<TextItem> {
         onPanUpdate: (d) => widget.onMoved(d.delta.dx, d.delta.dy),
         onPanEnd: (_) => widget.onDragEnd(),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
+            // Selection underline
+            if (_showHandles)
+              Positioned(
+                left: -4,
+                right: -4,
+                top: -4,
+                bottom: -4,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: primary, width: 2),
+                      borderRadius: BorderRadius.all(AppRadius.sm),
+                    ),
+                  ),
+                ),
+              ),
             IntrinsicWidth(
               child: EditableText(
                 controller: _controller,
@@ -80,7 +106,7 @@ class _TextItemState extends State<TextItem> {
                 },
               ),
             ),
-            if (_hovered)
+            if (_showHandles)
               Positioned(
                 top: -8,
                 right: -8,

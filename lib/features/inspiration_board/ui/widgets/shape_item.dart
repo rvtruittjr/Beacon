@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../models/board_item_type.dart';
 import '../../models/inspiration_item_model.dart';
+import '../../providers/tool_state_provider.dart';
 
-class ShapeItem extends StatefulWidget {
+class ShapeItem extends ConsumerStatefulWidget {
   const ShapeItem({
     super.key,
     required this.item,
@@ -25,10 +27,10 @@ class ShapeItem extends StatefulWidget {
   final VoidCallback onDelete;
 
   @override
-  State<ShapeItem> createState() => _ShapeItemState();
+  ConsumerState<ShapeItem> createState() => _ShapeItemState();
 }
 
-class _ShapeItemState extends State<ShapeItem> {
+class _ShapeItemState extends ConsumerState<ShapeItem> {
   bool _hovered = false;
 
   ShapeType get _shapeType =>
@@ -47,8 +49,15 @@ class _ShapeItemState extends State<ShapeItem> {
     return const Color(0xFF6C63FF);
   }
 
+  bool get _showHandles {
+    final selected = ref.watch(selectedItemProvider);
+    return _hovered || selected == widget.item.id;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -59,6 +68,7 @@ class _ShapeItemState extends State<ShapeItem> {
           width: widget.item.width,
           height: widget.item.height,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               CustomPaint(
                 size: Size(widget.item.width, widget.item.height),
@@ -69,10 +79,22 @@ class _ShapeItemState extends State<ShapeItem> {
                   strokeWidth: _strokeWidth,
                 ),
               ),
-              if (_hovered)
+              // Selection border
+              if (_showHandles)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: primary, width: 2),
+                        borderRadius: BorderRadius.all(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                ),
+              if (_showHandles)
                 Positioned(
-                  top: 0,
-                  right: 0,
+                  top: -4,
+                  right: -4,
                   child: GestureDetector(
                     onTap: widget.onDelete,
                     child: Container(
@@ -86,25 +108,33 @@ class _ShapeItemState extends State<ShapeItem> {
                     ),
                   ),
                 ),
-              if (_hovered)
+              if (_showHandles)
                 Positioned(
                   right: 0,
                   bottom: 0,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onPanUpdate: (d) =>
                         widget.onResized(d.delta.dx, d.delta.dy),
                     onPanEnd: (_) => widget.onResizeEnd(),
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8),
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Align(
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.9),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                            ),
+                          ),
+                          child: const Icon(Icons.drag_handle,
+                              size: 10, color: Colors.white),
                         ),
                       ),
-                      child: const Icon(Icons.drag_handle,
-                          size: 12, color: Colors.white),
                     ),
                   ),
                 ),
@@ -171,7 +201,6 @@ class _ShapePainter extends CustomPainter {
         final start = Offset(0, size.height / 2);
         final end = Offset(size.width, size.height / 2);
         canvas.drawLine(start, end, strokePaint);
-        // Arrowhead
         final headSize = math.min(16.0, size.width * 0.2);
         final path = Path()
           ..moveTo(end.dx, end.dy)

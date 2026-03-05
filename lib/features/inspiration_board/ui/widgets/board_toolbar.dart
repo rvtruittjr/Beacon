@@ -10,6 +10,27 @@ import '../../providers/tool_state_provider.dart';
 class BoardToolbar extends ConsumerWidget {
   const BoardToolbar({super.key});
 
+  static String _toolLabel(ToolMode mode) => switch (mode) {
+        ToolMode.select => '',
+        ToolMode.pen => 'Draw Mode',
+        ToolMode.line => 'Line Mode',
+        ToolMode.shape => 'Shape Mode',
+        ToolMode.text => 'Text Mode',
+        ToolMode.stickyNote => 'Note Mode',
+        ToolMode.connector => 'Connect Mode',
+        ToolMode.eraser => 'Erase Mode',
+      };
+
+  static String _colorName(String hex) => switch (hex) {
+        '#FFFFFF' => 'White',
+        '#000000' => 'Black',
+        '#FF6B6B' => 'Red',
+        '#6C63FF' => 'Violet',
+        '#00C853' => 'Green',
+        '#FFEB3B' => 'Yellow',
+        _ => hex,
+      };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeTool = ref.watch(activeToolProvider);
@@ -22,9 +43,38 @@ class BoardToolbar extends ConsumerWidget {
         isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final mutedColor = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
+    final label = _toolLabel(activeTool);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Mode label pill (shown when not in select mode)
+        if (label.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.15),
+                borderRadius: BorderRadius.all(AppRadius.md),
+              ),
+              child: Text(
+                label,
+                style: AppFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+
         // Main tool buttons
         Container(
           padding: const EdgeInsets.symmetric(
@@ -196,118 +246,185 @@ class _SubOptionsBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.all(AppRadius.md),
-        border: Border.all(color: borderColor),
-        boxShadow: AppShadows.md,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Color dots
-          ...toolbarColors.take(6).map((hex) {
-            final color = _hexToColor(hex);
-            final isSelected = switch (activeTool) {
-              ToolMode.pen => ref.watch(penColorProvider) == hex,
-              ToolMode.line => ref.watch(lineColorProvider) == hex,
-              ToolMode.connector => ref.watch(connectorColorProvider) == hex,
-              _ => ref.watch(shapeFillColorProvider) == hex,
-            };
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: GestureDetector(
-                onTap: () {
-                  if (activeTool == ToolMode.pen) {
-                    ref.read(penColorProvider.notifier).state = hex;
-                  } else if (activeTool == ToolMode.line) {
-                    ref.read(lineColorProvider.notifier).state = hex;
-                  } else if (activeTool == ToolMode.connector) {
-                    ref.read(connectorColorProvider.notifier).state = hex;
-                  } else {
-                    ref.read(shapeFillColorProvider.notifier).state = hex;
-                  }
-                },
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : borderColor,
-                      width: isSelected ? 2 : 1,
+    final connectorSource = ref.watch(connectorSourceProvider);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.all(AppRadius.md),
+            border: Border.all(color: borderColor),
+            boxShadow: AppShadows.md,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Color dots with tooltips
+              ...toolbarColors.take(6).map((hex) {
+                final color = _hexToColor(hex);
+                final isSelected = switch (activeTool) {
+                  ToolMode.pen => ref.watch(penColorProvider) == hex,
+                  ToolMode.line => ref.watch(lineColorProvider) == hex,
+                  ToolMode.connector => ref.watch(connectorColorProvider) == hex,
+                  _ => ref.watch(shapeFillColorProvider) == hex,
+                };
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Tooltip(
+                    message: BoardToolbar._colorName(hex),
+                    child: GestureDetector(
+                      onTap: () {
+                        if (activeTool == ToolMode.pen) {
+                          ref.read(penColorProvider.notifier).state = hex;
+                        } else if (activeTool == ToolMode.line) {
+                          ref.read(lineColorProvider.notifier).state = hex;
+                        } else if (activeTool == ToolMode.connector) {
+                          ref.read(connectorColorProvider.notifier).state = hex;
+                        } else {
+                          ref.read(shapeFillColorProvider.notifier).state = hex;
+                        }
+                      },
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : borderColor,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
+                );
+              }),
+              if (activeTool == ToolMode.pen) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Width',
+                  style: TextStyle(fontSize: 10, color: mutedColor),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 80,
+                  child: Slider(
+                    value: ref.watch(penStrokeWidthProvider),
+                    min: 1,
+                    max: 12,
+                    onChanged: (v) =>
+                        ref.read(penStrokeWidthProvider.notifier).state = v,
+                  ),
+                ),
+                Text(
+                  '${ref.watch(penStrokeWidthProvider).round()}px',
+                  style: TextStyle(fontSize: 10, color: mutedColor),
+                ),
+              ],
+              if (activeTool == ToolMode.shape) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Tooltip(
+                  message: 'Rectangle',
+                  child: _ShapeTypeButton(
+                    icon: LucideIcons.square,
+                    type: ShapeType.rectangle,
+                    ref: ref,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+                Tooltip(
+                  message: 'Circle',
+                  child: _ShapeTypeButton(
+                    icon: LucideIcons.circle,
+                    type: ShapeType.circle,
+                    ref: ref,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+                Tooltip(
+                  message: 'Line',
+                  child: _ShapeTypeButton(
+                    icon: LucideIcons.minus,
+                    type: ShapeType.line,
+                    ref: ref,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+                Tooltip(
+                  message: 'Arrow',
+                  child: _ShapeTypeButton(
+                    icon: LucideIcons.arrowRight,
+                    type: ShapeType.arrow,
+                    ref: ref,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+              ],
+              if (activeTool == ToolMode.line) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Width',
+                  style: TextStyle(fontSize: 10, color: mutedColor),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 80,
+                  child: Slider(
+                    value: ref.watch(lineStrokeWidthProvider),
+                    min: 1,
+                    max: 8,
+                    onChanged: (v) =>
+                        ref.read(lineStrokeWidthProvider.notifier).state = v,
+                  ),
+                ),
+                Text(
+                  '${ref.watch(lineStrokeWidthProvider).round()}px',
+                  style: TextStyle(fontSize: 10, color: mutedColor),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Tooltip(
+                  message: 'Toggle curved line',
+                  child: _CurvedToggle(ref: ref, mutedColor: mutedColor),
+                ),
+              ],
+            ],
+          ),
+        ),
+        // Connector guidance text
+        if (activeTool == ToolMode.connector)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2196F3).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.all(AppRadius.md),
+              ),
+              child: Text(
+                connectorSource == null
+                    ? 'Tap the source item'
+                    : 'Now tap the target item',
+                style: AppFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF2196F3),
                 ),
               ),
-            );
-          }),
-          if (activeTool == ToolMode.pen) ...[
-            const SizedBox(width: AppSpacing.sm),
-            // Stroke width slider
-            SizedBox(
-              width: 80,
-              child: Slider(
-                value: ref.watch(penStrokeWidthProvider),
-                min: 1,
-                max: 12,
-                onChanged: (v) =>
-                    ref.read(penStrokeWidthProvider.notifier).state = v,
-              ),
             ),
-          ],
-          if (activeTool == ToolMode.shape) ...[
-            const SizedBox(width: AppSpacing.sm),
-            _ShapeTypeButton(
-              icon: LucideIcons.square,
-              type: ShapeType.rectangle,
-              ref: ref,
-              mutedColor: mutedColor,
-            ),
-            _ShapeTypeButton(
-              icon: LucideIcons.circle,
-              type: ShapeType.circle,
-              ref: ref,
-              mutedColor: mutedColor,
-            ),
-            _ShapeTypeButton(
-              icon: LucideIcons.minus,
-              type: ShapeType.line,
-              ref: ref,
-              mutedColor: mutedColor,
-            ),
-            _ShapeTypeButton(
-              icon: LucideIcons.arrowRight,
-              type: ShapeType.arrow,
-              ref: ref,
-              mutedColor: mutedColor,
-            ),
-          ],
-          if (activeTool == ToolMode.line) ...[
-            const SizedBox(width: AppSpacing.sm),
-            SizedBox(
-              width: 80,
-              child: Slider(
-                value: ref.watch(lineStrokeWidthProvider),
-                min: 1,
-                max: 8,
-                onChanged: (v) =>
-                    ref.read(lineStrokeWidthProvider.notifier).state = v,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            _CurvedToggle(ref: ref, mutedColor: mutedColor),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 

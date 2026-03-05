@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../models/inspiration_item_model.dart';
+import '../../providers/tool_state_provider.dart';
 
-class BoardItem extends StatefulWidget {
+class BoardItem extends ConsumerStatefulWidget {
   const BoardItem({
     super.key,
     required this.item,
@@ -24,10 +26,10 @@ class BoardItem extends StatefulWidget {
   final VoidCallback onDelete;
 
   @override
-  State<BoardItem> createState() => _BoardItemState();
+  ConsumerState<BoardItem> createState() => _BoardItemState();
 }
 
-class _BoardItemState extends State<BoardItem> {
+class _BoardItemState extends ConsumerState<BoardItem> {
   bool _hovered = false;
   String? _signedUrl;
 
@@ -46,7 +48,6 @@ class _BoardItemState extends State<BoardItem> {
   Future<void> _resolveUrl() async {
     final url = widget.item.imageUrl;
     if (url == null || url.isEmpty) return;
-    // If it's a Supabase storage URL, get a signed URL
     if (url.contains('supabase') && url.contains('brand-assets')) {
       final signed = await StorageService.toSignedUrl(url);
       if (mounted) setState(() => _signedUrl = signed);
@@ -55,9 +56,15 @@ class _BoardItemState extends State<BoardItem> {
     }
   }
 
+  bool get _showHandles {
+    final selected = ref.watch(selectedItemProvider);
+    return _hovered || selected == widget.item.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -74,6 +81,9 @@ class _BoardItemState extends State<BoardItem> {
             borderRadius: BorderRadius.all(AppRadius.md),
             boxShadow: AppShadows.md,
             color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            border: _showHandles
+                ? Border.all(color: primary, width: 2)
+                : null,
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
@@ -122,8 +132,8 @@ class _BoardItemState extends State<BoardItem> {
                   ),
                 ),
 
-              // Delete button (on hover)
-              if (_hovered)
+              // Delete button
+              if (_showHandles)
                 Positioned(
                   top: 4,
                   right: 4,
@@ -145,32 +155,37 @@ class _BoardItemState extends State<BoardItem> {
                   ),
                 ),
 
-              // Resize handle (bottom-right corner)
-              if (_hovered)
+              // Resize handle (bigger hit area: 36px)
+              if (_showHandles)
                 Positioned(
                   right: 0,
                   bottom: 0,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onPanUpdate: (details) {
                       widget.onResized(details.delta.dx, details.delta.dy);
                     },
                     onPanEnd: (_) => widget.onResizeEnd(),
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.8),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8),
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Align(
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.9),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.drag_handle,
+                            size: 10,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.drag_handle,
-                        size: 14,
-                        color: Colors.white,
                       ),
                     ),
                   ),

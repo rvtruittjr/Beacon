@@ -27,9 +27,16 @@ final connectorColorProvider = StateProvider<String>((ref) => '#FFFFFF');
 /// First selected item ID for connector two-tap flow.
 final connectorSourceProvider = StateProvider<String?>((ref) => null);
 
+/// Selected item ID (click-to-select in select mode).
+final selectedItemProvider = StateProvider<String?>((ref) => null);
+
 /// Active line preview (start + current end) while dragging.
 final activeLineStartProvider = StateProvider<Offset?>((ref) => null);
 final activeLineEndProvider = StateProvider<Offset?>((ref) => null);
+
+/// Shape drag-to-size preview (start + current end) while dragging.
+final shapePreviewStartProvider = StateProvider<Offset?>((ref) => null);
+final shapePreviewEndProvider = StateProvider<Offset?>((ref) => null);
 
 /// Sticky note default color.
 final stickyNoteColorProvider = StateProvider<String>((ref) => '#FFEB3B');

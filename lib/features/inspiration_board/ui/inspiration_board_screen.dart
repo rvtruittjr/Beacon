@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/design_tokens.dart';
@@ -34,9 +37,28 @@ class InspirationBoardScreen extends ConsumerStatefulWidget {
 class _InspirationBoardScreenState
     extends ConsumerState<InspirationBoardScreen> {
   bool _initialized = false;
+  final FocusNode _focusNode = FocusNode();
 
   /// Drawing strokes stored locally (persisted as items on stroke end).
   final List<DrawingStroke> _drawingStrokes = [];
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  /// Cursor per tool mode.
+  MouseCursor _cursorForTool(ToolMode tool) => switch (tool) {
+        ToolMode.select => SystemMouseCursors.grab,
+        ToolMode.pen => SystemMouseCursors.precise,
+        ToolMode.line => SystemMouseCursors.precise,
+        ToolMode.shape => SystemMouseCursors.precise,
+        ToolMode.text => SystemMouseCursors.text,
+        ToolMode.stickyNote => SystemMouseCursors.cell,
+        ToolMode.connector => SystemMouseCursors.click,
+        ToolMode.eraser => SystemMouseCursors.noDrop,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -69,120 +91,149 @@ class _InspirationBoardScreenState
 
     final boardItems = ref.watch(boardStateProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 0,
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _onKeyEvent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, 0,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Moodboard',
+                  style: AppFonts.clashDisplay(fontSize: 32, color: textColor),
+                ),
+                const Spacer(),
+                AppButton(
+                  label: 'Add Image',
+                  icon: Icons.add,
+                  onPressed: () => _addItem(context),
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            children: [
-              Text(
-                'Moodboard',
-                style: AppFonts.clashDisplay(fontSize: 32, color: textColor),
-              ),
-              const Spacer(),
-              AppButton(
-                label: 'Add Image',
-                icon: Icons.add,
-                onPressed: () => _addItem(context),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Expanded(
-          child: itemsAsync.when(
-            loading: () => const LoadingIndicator(),
-            error: (_, __) =>
-                const Center(child: Text('Failed to load board')),
-            data: (_) {
-              if (boardItems.isEmpty && _initialized && _drawingStrokes.isEmpty) {
-                return EmptyState(
-                  blockColor: AppColors.blockCoral,
-                  icon: Icons.dashboard_outlined,
-                  headline: 'Your moodboard is empty',
-                  supportingText:
-                      'Add images and inspiration to build your brand vision.',
-                  ctaLabel: 'Add first item',
-                  onCtaPressed: () => _addItem(context),
-                );
-              }
+          const SizedBox(height: AppSpacing.md),
+          Expanded(
+            child: itemsAsync.when(
+              loading: () => const LoadingIndicator(),
+              error: (_, __) =>
+                  const Center(child: Text('Failed to load board')),
+              data: (_) {
+                if (boardItems.isEmpty && _initialized && _drawingStrokes.isEmpty) {
+                  return EmptyState(
+                    blockColor: AppColors.blockCoral,
+                    icon: Icons.dashboard_outlined,
+                    headline: 'Your moodboard is empty',
+                    supportingText:
+                        'Add images and inspiration to build your brand vision.',
+                    ctaLabel: 'Add first item',
+                    onCtaPressed: () => _addItem(context),
+                  );
+                }
 
-              return Stack(
-                children: [
-                  // Main canvas
-                  InteractiveViewer(
-                    constrained: false,
-                    boundaryMargin: const EdgeInsets.all(2000),
-                    minScale: 0.3,
-                    maxScale: 2.0,
-                    panEnabled: activeTool == ToolMode.select,
-                    scaleEnabled: activeTool == ToolMode.select,
-                    child: SizedBox(
-                      width: 3000,
-                      height: 3000,
-                      child: Stack(
-                        children: [
-                          // Drawing layer (bottom)
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: DrawingCanvas(
-                                strokes: _drawingStrokes,
-                                activeStroke: ref.watch(activeStrokeProvider),
-                              ),
+                return Stack(
+                  children: [
+                    // Main canvas with cursor feedback
+                    MouseRegion(
+                      cursor: _cursorForTool(activeTool),
+                      child: GestureDetector(
+                        // Tap empty canvas in select mode → deselect
+                        onTap: activeTool == ToolMode.select
+                            ? () => ref.read(selectedItemProvider.notifier).state = null
+                            : null,
+                        child: InteractiveViewer(
+                          constrained: false,
+                          boundaryMargin: const EdgeInsets.all(2000),
+                          minScale: 0.3,
+                          maxScale: 2.0,
+                          panEnabled: activeTool == ToolMode.select,
+                          scaleEnabled: activeTool == ToolMode.select,
+                          child: SizedBox(
+                            width: 3000,
+                            height: 3000,
+                            child: Stack(
+                              children: [
+                                // Drawing layer (bottom)
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: DrawingCanvas(
+                                      strokes: _drawingStrokes,
+                                      activeStroke: ref.watch(activeStrokeProvider),
+                                    ),
+                                  ),
+                                ),
+
+                                // Line preview while dragging
+                                Positioned.fill(
+                                  child: _LinePreview(ref: ref),
+                                ),
+
+                                // Shape preview while dragging
+                                Positioned.fill(
+                                  child: _ShapePreview(ref: ref),
+                                ),
+
+                                // Connector items
+                                ..._buildConnectors(boardItems),
+
+                                // Line items
+                                ..._buildLineItems(boardItems),
+
+                                // Board items layer
+                                ..._buildBoardItems(boardItems),
+
+                                // Gesture overlay for drawing / shape creation / text+sticky placement
+                                if (activeTool != ToolMode.select)
+                                  Positioned.fill(
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.translucent,
+                                      onPanStart: (d) =>
+                                          _onCanvasPanStart(d, activeTool),
+                                      onPanUpdate: (d) =>
+                                          _onCanvasPanUpdate(d, activeTool),
+                                      onPanEnd: (d) =>
+                                          _onCanvasPanEnd(d, activeTool),
+                                      onTapUp: (d) =>
+                                          _onCanvasTap(d, activeTool),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-
-                          // Line preview while dragging
-                          Positioned.fill(
-                            child: _LinePreview(ref: ref),
-                          ),
-
-                          // Connector items (below regular items so they appear as lines behind)
-                          ..._buildConnectors(boardItems),
-
-                          // Line items (absolute coordinates)
-                          ..._buildLineItems(boardItems),
-
-                          // Board items layer
-                          ..._buildBoardItems(boardItems),
-
-                          // Gesture overlay for drawing / shape creation / text+sticky placement
-                          if (activeTool != ToolMode.select)
-                            Positioned.fill(
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onPanStart: (d) =>
-                                    _onCanvasPanStart(d, activeTool),
-                                onPanUpdate: (d) =>
-                                    _onCanvasPanUpdate(d, activeTool),
-                                onPanEnd: (d) =>
-                                    _onCanvasPanEnd(d, activeTool),
-                                onTapUp: (d) =>
-                                    _onCanvasTap(d, activeTool),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Floating toolbar
-                  Positioned(
-                    bottom: AppSpacing.lg,
-                    left: 0,
-                    right: 0,
-                    child: const Center(child: BoardToolbar()),
-                  ),
-                ],
-              );
-            },
+                    // Floating toolbar
+                    Positioned(
+                      bottom: AppSpacing.lg,
+                      left: 0,
+                      right: 0,
+                      child: const Center(child: BoardToolbar()),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  // ---- Keyboard handler ----
+
+  void _onKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      ref.read(activeToolProvider.notifier).state = ToolMode.select;
+      ref.read(connectorSourceProvider.notifier).state = null;
+      ref.read(selectedItemProvider.notifier).state = null;
+    }
   }
 
   List<Widget> _buildConnectors(List<InspirationItemModel> items) {
@@ -210,6 +261,8 @@ class _InspirationBoardScreenState
   }
 
   List<Widget> _buildBoardItems(List<InspirationItemModel> items) {
+    final activeTool = ref.watch(activeToolProvider);
+
     return items
         .where((item) =>
             item.type != 'drawing' &&
@@ -271,34 +324,38 @@ class _InspirationBoardScreenState
       return Positioned(
         left: item.posX,
         top: item.posY,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            child,
-            // Blue ring highlight when this item is selected as connector source
-            if (isConnectorSource)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF2196F3),
-                        width: 3,
+        child: GestureDetector(
+          // Tap item in select mode → select it
+          onTap: activeTool == ToolMode.select
+              ? () => ref.read(selectedItemProvider.notifier).state = item.id
+              : null,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              child,
+              // Blue ring highlight when this item is selected as connector source
+              if (isConnectorSource)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: const Color(0xFF2196F3),
+                          width: 3,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       );
     }).toList();
   }
 
   // ---- Drawing gestures ----
-
-  Offset? _shapeStart;
 
   void _onCanvasPanStart(DragStartDetails d, ToolMode tool) {
     if (tool == ToolMode.pen) {
@@ -309,7 +366,9 @@ class _InspirationBoardScreenState
         strokeWidth: ref.read(penStrokeWidthProvider),
       );
     } else if (tool == ToolMode.shape) {
-      _shapeStart = d.localPosition;
+      final pos = d.localPosition;
+      ref.read(shapePreviewStartProvider.notifier).state = pos;
+      ref.read(shapePreviewEndProvider.notifier).state = pos;
     } else if (tool == ToolMode.line) {
       final pos = d.localPosition;
       ref.read(activeLineStartProvider.notifier).state = pos;
@@ -334,6 +393,8 @@ class _InspirationBoardScreenState
         colorHex: current.colorHex,
         strokeWidth: current.strokeWidth,
       );
+    } else if (tool == ToolMode.shape) {
+      ref.read(shapePreviewEndProvider.notifier).state = d.localPosition;
     } else if (tool == ToolMode.line) {
       ref.read(activeLineEndProvider.notifier).state = d.localPosition;
     }
@@ -347,9 +408,24 @@ class _InspirationBoardScreenState
         _persistDrawingStroke(stroke);
       }
       ref.read(activeStrokeProvider.notifier).state = null;
-    } else if (tool == ToolMode.shape && _shapeStart != null) {
-      _createShapeItem(_shapeStart!.dx, _shapeStart!.dy);
-      _shapeStart = null;
+    } else if (tool == ToolMode.shape) {
+      final start = ref.read(shapePreviewStartProvider);
+      final end = ref.read(shapePreviewEndProvider);
+      if (start != null && end != null) {
+        final dx = (end.dx - start.dx).abs();
+        final dy = (end.dy - start.dy).abs();
+        if (dx > 10 || dy > 10) {
+          // Drag-to-size: use dragged rectangle
+          final x = math.min(start.dx, end.dx);
+          final y = math.min(start.dy, end.dy);
+          _createShapeItemSized(x, y, math.max(dx, 20), math.max(dy, 20));
+        } else {
+          // Small drag = tap → fixed size
+          _createShapeItem(start.dx, start.dy);
+        }
+      }
+      ref.read(shapePreviewStartProvider.notifier).state = null;
+      ref.read(shapePreviewEndProvider.notifier).state = null;
     } else if (tool == ToolMode.line) {
       final start = ref.read(activeLineStartProvider);
       final end = ref.read(activeLineEndProvider);
@@ -447,6 +523,36 @@ class _InspirationBoardScreenState
         height: shapeType == ShapeType.line || shapeType == ShapeType.arrow
             ? 40
             : 120,
+        type: 'shape',
+        data: {
+          'shapeType': shapeType.name,
+          'fillColor': fillColor,
+          'strokeColor': strokeColor,
+          'strokeWidth': 2.0,
+        },
+      );
+      ref.read(boardStateProvider.notifier).addItem(item);
+    } catch (e) {
+      _showError('Failed to add shape: $e');
+    }
+  }
+
+  Future<void> _createShapeItemSized(
+      double x, double y, double w, double h) async {
+    final brandId = ref.read(currentBrandProvider);
+    if (brandId == null) return;
+
+    try {
+      final repo = ref.read(inspirationRepositoryProvider);
+      final shapeType = ref.read(shapeTypeProvider);
+      final fillColor = ref.read(shapeFillColorProvider);
+      final strokeColor = ref.read(shapeStrokeColorProvider);
+      final item = await repo.addItem(
+        brandId: brandId,
+        posX: x,
+        posY: y,
+        width: w,
+        height: h,
         type: 'shape',
         data: {
           'shapeType': shapeType.name,
@@ -760,4 +866,63 @@ class _LinePreviewPainter extends CustomPainter {
       old.end != end ||
       old.color != color ||
       old.strokeWidth != strokeWidth;
+}
+
+/// Live preview rectangle while dragging the shape tool.
+class _ShapePreview extends StatelessWidget {
+  const _ShapePreview({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final start = ref.watch(shapePreviewStartProvider);
+    final end = ref.watch(shapePreviewEndProvider);
+    if (start == null || end == null) return const SizedBox.shrink();
+
+    final dx = (end.dx - start.dx).abs();
+    final dy = (end.dy - start.dy).abs();
+    if (dx < 5 && dy < 5) return const SizedBox.shrink();
+
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return CustomPaint(
+      painter: _ShapePreviewPainter(
+        start: start,
+        end: end,
+        color: primary,
+      ),
+    );
+  }
+}
+
+class _ShapePreviewPainter extends CustomPainter {
+  _ShapePreviewPainter({
+    required this.start,
+    required this.end,
+    required this.color,
+  });
+
+  final Offset start;
+  final Offset end;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromPoints(start, end);
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = color.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    canvas.drawRect(rect, paint);
+    canvas.drawRect(rect, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(_ShapePreviewPainter old) =>
+      old.start != start || old.end != end || old.color != color;
 }

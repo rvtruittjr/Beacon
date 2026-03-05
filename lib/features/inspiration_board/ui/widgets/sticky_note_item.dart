@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/design_tokens.dart';
 import '../../../../core/config/app_fonts.dart';
 import '../../models/inspiration_item_model.dart';
+import '../../providers/tool_state_provider.dart';
 
-class StickyNoteItem extends StatefulWidget {
+class StickyNoteItem extends ConsumerStatefulWidget {
   const StickyNoteItem({
     super.key,
     required this.item,
@@ -25,10 +27,10 @@ class StickyNoteItem extends StatefulWidget {
   final void Function(Map<String, dynamic> data) onDataChanged;
 
   @override
-  State<StickyNoteItem> createState() => _StickyNoteItemState();
+  ConsumerState<StickyNoteItem> createState() => _StickyNoteItemState();
 }
 
-class _StickyNoteItemState extends State<StickyNoteItem> {
+class _StickyNoteItemState extends ConsumerState<StickyNoteItem> {
   bool _hovered = false;
   late TextEditingController _controller;
 
@@ -55,8 +57,15 @@ class _StickyNoteItemState extends State<StickyNoteItem> {
     super.dispose();
   }
 
+  bool get _showHandles {
+    final selected = ref.watch(selectedItemProvider);
+    return _hovered || selected == widget.item.id;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -70,6 +79,9 @@ class _StickyNoteItemState extends State<StickyNoteItem> {
             color: _bgColor,
             borderRadius: BorderRadius.all(AppRadius.md),
             boxShadow: AppShadows.md,
+            border: _showHandles
+                ? Border.all(color: primary, width: 2)
+                : null,
           ),
           child: Stack(
             children: [
@@ -91,7 +103,7 @@ class _StickyNoteItemState extends State<StickyNoteItem> {
                   },
                 ),
               ),
-              if (_hovered)
+              if (_showHandles)
                 Positioned(
                   top: 4,
                   right: 4,
@@ -108,24 +120,32 @@ class _StickyNoteItemState extends State<StickyNoteItem> {
                     ),
                   ),
                 ),
-              if (_hovered)
+              if (_showHandles)
                 Positioned(
                   right: 0,
                   bottom: 0,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onPanUpdate: (d) =>
                         widget.onResized(d.delta.dx, d.delta.dy),
                     onPanEnd: (_) => widget.onResizeEnd(),
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8),
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Align(
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                            ),
+                          ),
+                          child: const Icon(Icons.drag_handle, size: 10, color: Colors.white),
                         ),
                       ),
-                      child: const Icon(Icons.drag_handle, size: 12, color: Colors.white),
                     ),
                   ),
                 ),
