@@ -991,6 +991,9 @@ class _LogOutSectionState extends ConsumerState<_LogOutSection> {
     setState(() => _loggingOut = true);
     try {
       await ref.read(authRepositoryProvider).signOut();
+      if (mounted) {
+        GoRouter.of(context).go('/login');
+      }
     } catch (_) {
       if (mounted) setState(() => _loggingOut = false);
     }

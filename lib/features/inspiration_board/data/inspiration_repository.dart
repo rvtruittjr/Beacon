@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import '../../../core/services/supabase_service.dart';
 import '../models/inspiration_item_model.dart';
 
@@ -39,7 +37,7 @@ class InspirationRepository {
       'width': width,
       'height': height,
       'type': type,
-      'data': jsonEncode(data),
+      'data': data,
     };
 
     final response = await SupabaseService.client
@@ -75,7 +73,7 @@ class InspirationRepository {
   Future<void> updateData(String id, Map<String, dynamic> data) async {
     await SupabaseService.client
         .from('inspiration_items')
-        .update({'data': jsonEncode(data)})
+        .update({'data': data})
         .eq('id', id);
   }
 

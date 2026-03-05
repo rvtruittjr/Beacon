@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class InspirationItemModel {
   final String id;
   final String brandId;
@@ -28,6 +30,18 @@ class InspirationItemModel {
   });
 
   factory InspirationItemModel.fromJson(Map<String, dynamic> json) {
+    // Handle data field — may be Map, String (double-encoded), or null
+    Map<String, dynamic> parsedData = const {};
+    final rawData = json['data'];
+    if (rawData is Map<String, dynamic>) {
+      parsedData = rawData;
+    } else if (rawData is String && rawData.isNotEmpty) {
+      try {
+        final decoded = _tryDecodeJson(rawData);
+        if (decoded is Map<String, dynamic>) parsedData = decoded;
+      } catch (_) {}
+    }
+
     return InspirationItemModel(
       id: json['id'] as String,
       brandId: json['brand_id'] as String,
@@ -39,9 +53,19 @@ class InspirationItemModel {
       height: (json['height'] as num).toDouble(),
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       type: json['type'] as String? ?? 'image',
-      data: (json['data'] as Map<String, dynamic>?) ?? {},
+      data: parsedData,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
+  }
+
+  static dynamic _tryDecodeJson(String s) {
+    try {
+      return Map<String, dynamic>.from(
+        (const JsonDecoder().convert(s)) as Map,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   InspirationItemModel copyWith({
